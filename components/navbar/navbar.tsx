@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Menu, X, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import Link from "next/link";
 
 const Navbar = () => {
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -47,11 +48,10 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`sticky top-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-white/90 dark:bg-slate-950/90 backdrop-blur-md shadow-sm border-b"
-          : "bg-white/80 dark:bg-slate-950/80 backdrop-blur-md"
-      }`}
+      className={`sticky top-0 z-50 transition-all duration-300 ${scrolled
+        ? "bg-white/90 dark:bg-slate-950/90 backdrop-blur-md shadow-sm border-b"
+        : "bg-white/80 dark:bg-slate-950/80 backdrop-blur-md"
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-6">
 
@@ -99,13 +99,21 @@ const Navbar = () => {
 
           {/* Desktop Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <button className="rounded-full border border-blue-500 px-5 py-2 font-medium text-blue-500 transition hover:bg-blue-500 hover:text-white">
-              Login
-            </button>
 
-            <button className="rounded-full bg-blue-600 px-5 py-2 font-medium text-white shadow-md transition hover:bg-blue-700 hover:scale-105">
+            <Link
+              href="/login"
+              className="rounded-full border border-blue-500 px-5 py-2 font-medium text-blue-500 transition hover:bg-blue-500 hover:text-white"
+            >
+              Login
+            </Link>
+
+            <Link
+              href="/signup"
+              className="rounded-full bg-blue-600 px-5 py-2 font-medium text-white shadow-md transition hover:bg-blue-700 hover:scale-105"
+            >
               Sign Up
-            </button>
+            </Link>
+
           </div>
 
           {/* Mobile Menu Button */}
@@ -159,13 +167,21 @@ const Navbar = () => {
                 )}
               </button>
 
-              <button className="rounded-full border border-blue-500 py-2 font-medium text-blue-500 transition hover:bg-blue-500 hover:text-white">
+              <Link
+                href="/login"
+                onClick={() => setMobileMenu(false)}
+                className="rounded-full border border-blue-500 py-2 font-medium text-blue-500 transition hover:bg-blue-500 hover:text-white text-center"
+              >
                 Login
-              </button>
+              </Link>
 
-              <button className="rounded-full bg-blue-600 py-2 font-medium text-white transition hover:bg-blue-700">
+              <Link
+                href="/signup"
+                onClick={() => setMobileMenu(false)}
+                className="rounded-full bg-blue-600 py-2 font-medium text-white transition hover:bg-blue-700 text-center"
+              >
                 Sign Up
-              </button>
+              </Link>
 
             </div>
 
