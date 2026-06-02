@@ -72,7 +72,7 @@ const Faq: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="py-32 bg-slate-50">
+    <section className="py-32 bg-slate-50 dark:bg-slate-950">
       <div className="max-w-4xl mx-auto px-6">
 
         {/* Header */}
@@ -83,15 +83,15 @@ const Faq: React.FC = () => {
           transition={{ duration: 0.6 }}
           className="text-center"
         >
-          <span className="inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium shadow-sm">
+          <span className="inline-flex rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 shadow-sm">
             Frequently Asked Questions
           </span>
 
-          <h2 className="mt-6 text-4xl md:text-5xl font-bold text-slate-900">
+          <h2 className="mt-6 text-4xl md:text-5xl font-bold text-slate-900 dark:text-white">
             Everything You Need to Know
           </h2>
 
-          <p className="mt-6 text-lg text-slate-600">
+          <p className="mt-6 text-lg text-slate-600 dark:text-slate-400">
             Find answers to common questions about FlowAI, its features,
             security, and how it helps you stay productive.
           </p>
@@ -109,10 +109,8 @@ const Faq: React.FC = () => {
             <motion.div
               key={index}
               variants={itemVariants}
-              whileHover={{
-                y: -2,
-              }}
-              className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+              whileHover={{ y: -2 }}
+              className="overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
             >
               <button
                 onClick={() =>
@@ -120,7 +118,7 @@ const Faq: React.FC = () => {
                 }
                 className="flex w-full items-center justify-between px-6 py-5 text-left"
               >
-                <span className="text-lg font-semibold text-slate-900">
+                <span className="text-lg font-semibold text-slate-900 dark:text-white">
                   {faq.question}
                 </span>
 
@@ -128,10 +126,8 @@ const Faq: React.FC = () => {
                   animate={{
                     rotate: openIndex === index ? 45 : 0,
                   }}
-                  transition={{
-                    duration: 0.25,
-                  }}
-                  className="text-3xl font-light text-slate-500"
+                  transition={{ duration: 0.25 }}
+                  className="text-3xl font-light text-slate-500 dark:text-slate-400"
                 >
                   +
                 </motion.span>
@@ -140,25 +136,14 @@ const Faq: React.FC = () => {
               <AnimatePresence>
                 {openIndex === index && (
                   <motion.div
-                    initial={{
-                      height: 0,
-                      opacity: 0,
-                    }}
-                    animate={{
-                      height: "auto",
-                      opacity: 1,
-                    }}
-                    exit={{
-                      height: 0,
-                      opacity: 0,
-                    }}
-                    transition={{
-                      duration: 0.3,
-                    }}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
                     className="overflow-hidden"
                   >
                     <div className="px-6 pb-6">
-                      <p className="leading-relaxed text-slate-600">
+                      <p className="leading-relaxed text-slate-600 dark:text-slate-400">
                         {faq.answer}
                       </p>
                     </div>
@@ -171,22 +156,13 @@ const Faq: React.FC = () => {
 
         {/* Support Card */}
         <motion.div
-          initial={{
-            opacity: 0,
-            y: 50,
-          }}
-          whileInView={{
-            opacity: 1,
-            y: 0,
-          }}
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{
-            delay: 0.2,
-            duration: 0.6,
-          }}
-          className="mt-20 relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm"
+          transition={{ delay: 0.2, duration: 0.6 }}
+          className="mt-20 relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-10 text-center shadow-sm"
         >
-          {/* Animated Glow */}
+          {/* Glow */}
           <motion.div
             animate={{
               opacity: [0.2, 0.5, 0.2],
@@ -196,26 +172,22 @@ const Faq: React.FC = () => {
               duration: 4,
               repeat: Infinity,
             }}
-            className="absolute inset-0 bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100 blur-3xl"
+            className="absolute inset-0 bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-pink-900/20 blur-3xl"
           />
 
           <div className="relative z-10">
-            <h3 className="text-3xl font-bold text-slate-900">
+            <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
               Still have questions?
             </h3>
 
-            <p className="mt-4 text-slate-600">
+            <p className="mt-4 text-slate-600 dark:text-slate-400">
               Our team is always ready to help you get the most out of FlowAI.
             </p>
 
             <motion.button
-              whileHover={{
-                scale: 1.05,
-              }}
-              whileTap={{
-                scale: 0.95,
-              }}
-              className="mt-8 rounded-full bg-slate-900 px-8 py-3 font-medium text-white transition"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="mt-8 rounded-full bg-slate-900 dark:bg-white px-8 py-3 font-medium text-white dark:text-slate-900 transition hover:bg-slate-800 dark:hover:bg-slate-200"
             >
               Contact Support
             </motion.button>
