@@ -72,7 +72,7 @@ const Faq: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="py-32 bg-slate-50 dark:bg-slate-950">
+    <section className="py-16 bg-slate-50 dark:bg-slate-950">
       <div className="max-w-4xl mx-auto px-6">
 
         {/* Header */}

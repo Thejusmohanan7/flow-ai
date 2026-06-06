@@ -51,7 +51,7 @@ const features = [
 
 const Features: React.FC = () => {
   return (
-    <section className="py-24 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+    <section className="py-16 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <div className="max-w-7xl mx-auto px-6">
 
         {/* Heading */}

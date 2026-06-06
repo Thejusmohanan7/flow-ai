@@ -5,7 +5,7 @@ import React from "react";
 const Footer: React.FC = () => {
   return (
     <footer className="overflow-hidden bg-slate-950 text-slate-300">
-      <div className="max-w-7xl mx-auto px-6 py-20">
+      <div className="max-w-7xl mx-auto px-6 py-16">
 
         {/* Top Section */}
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-5">

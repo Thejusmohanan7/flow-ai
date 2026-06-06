@@ -41,7 +41,7 @@ const steps = [
 
 const Works: React.FC = () => {
   return (
-    <section className="py-32 bg-slate-50 dark:bg-slate-950 overflow-hidden">
+    <section className="py-16 bg-slate-50 dark:bg-slate-950 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
 
         {/* Header */}

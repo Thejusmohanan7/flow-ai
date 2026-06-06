@@ -2,9 +2,9 @@ import React from "react";
 
 const Cta: React.FC = () => {
   return (
-    <section className="relative overflow-hidden py-32">
+    <section className="relative overflow-hidden py-16">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
+      <div className="absolute inset-0 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900" />
 
       {/* Glow Effects */}
       <div className="absolute left-0 top-0 h-96 w-96 rounded-full bg-blue-500/20 blur-3xl" />
