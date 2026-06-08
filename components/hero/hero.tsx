@@ -12,7 +12,7 @@ const Hero: React.FC = () => {
 <section className="relative overflow-hidden bg-linear-to-b from-white via-white to-slate-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">      {/* Background Blur Effects */}
       <div className="absolute top-20 left-10 h-72 w-72 rounded-full bg-blue-200/30 dark:bg-blue-500/10 blur-3xl" />
       <div className="absolute bottom-10 right-10 h-80 w-80 rounded-full bg-purple-200/30 dark:bg-purple-500/10 blur-3xl" />
-      <div className="max-w-7xl mx-auto px-6 py-16 lg:py-16">
+      <div className="max-w-7xl mx-auto px-6 py-10 lg:py-16">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
 
           {/* Left Content */}
