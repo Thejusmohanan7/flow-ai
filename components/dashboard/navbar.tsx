@@ -12,136 +12,108 @@ import {
   X,
   Moon,
   Sun,
+  Command,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import clsx from "clsx";
 
 export default function Navbar() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const { theme, setTheme } = useTheme();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-950/70 backdrop-blur-xl">
       <div className="px-4 md:px-6">
         <div className="flex h-16 items-center justify-between">
 
-          {/* Left Section */}
+          {/* LEFT (LOGO HERE ONLY) */}
           <div className="flex items-center gap-3">
-
-            {/* Mobile Menu */}
             <button
               onClick={() => setMobileMenu(!mobileMenu)}
-              className="md:hidden"
+              className="md:hidden rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
-              {mobileMenu ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              {mobileMenu ? <X size={20} /> : <Menu size={20} />}
             </button>
+
+            <Link href="/dashboard" className="flex items-center gap-2">
+              <Image
+                src="/logo.png"
+                alt="FlowAI"
+                width={150}
+                height={80}
+              />
+            </Link>
           </div>
 
-          {/* Desktop Search */}
-          <div className="hidden lg:flex items-center gap-2 w-[400px] rounded-xl border border-slate-200 dark:border-slate-800 px-3 py-2">
-            <Search className="h-4 w-4 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Search tasks, projects..."
-              className="w-full bg-transparent outline-none text-sm"
-            />
+          {/* SEARCH */}
+          <div className="hidden lg:flex items-center w-[420px]">
+            <div className="flex items-center gap-3 w-full rounded-xl border border-slate-200 dark:border-slate-800 px-3 py-2 bg-white/50 dark:bg-slate-900/50 focus-within:ring-2 focus-within:ring-blue-500 transition">
+
+              <Search size={16} className="text-slate-500" />
+
+              <input
+                type="text"
+                placeholder="Search tasks, projects..."
+                className="flex-1 bg-transparent outline-none text-sm placeholder:text-slate-500"
+              />
+
+              {/* Shortcut hint */}
+              <span className="flex items-center gap-1 text-xs bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded">
+                <Command size={12} /> K
+              </span>
+
+            </div>
           </div>
 
-          {/* Right Section */}
+          {/* RIGHT */}
           <div className="flex items-center gap-2 md:gap-3">
 
-            {/* New Task */}
-            <button className="hidden sm:flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition">
-              <Plus className="h-4 w-4" />
+            <button className="hidden sm:flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm text-white shadow-md">
+              <Plus size={16} />
               New Task
             </button>
 
-            {/* Mobile Add */}
-            <button className="sm:hidden rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800">
-              <Plus className="h-5 w-5" />
-            </button>
+            <div className="relative">
+              <button className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800">
+                <Bell size={20} />
+              </button>
+              <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+            </div>
 
-            {/* Notification */}
-            <button className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-              <Bell className="h-5 w-5" />
-            </button>
-
-            {/* Theme Toggle */}
             <button
               onClick={() =>
                 setTheme(theme === "dark" ? "light" : "dark")
               }
-              className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
-              {theme === "dark" ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
+              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
-            {/* User */}
             <UserButton afterSignOutUrl="/" />
           </div>
         </div>
 
-        {/* Mobile Search */}
-        <div className="lg:hidden pb-3">
-          <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 px-3 py-2">
-            <Search className="h-4 w-4 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-full bg-transparent outline-none text-sm"
-            />
+        {/* MOBILE MENU */}
+        <div
+          className={clsx(
+            "md:hidden overflow-hidden transition-all",
+            mobileMenu ? "max-h-96 py-4" : "max-h-0"
+          )}
+        >
+          <div className="flex flex-col gap-2">
+            {["Dashboard", "Tasks", "Projects", "Notes", "Settings"].map(
+              (item) => (
+                <Link
+                  key={item}
+                  href={`/${item.toLowerCase()}`}
+                  className="rounded-xl px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  {item}
+                </Link>
+              )
+            )}
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {mobileMenu && (
-          <div className="md:hidden border-t border-slate-200 dark:border-slate-800 py-4">
-            <div className="flex flex-col gap-3">
-
-              <Link
-                href="/dashboard"
-                className="rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                Dashboard
-              </Link>
-
-              <Link
-                href="/tasks"
-                className="rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                Tasks
-              </Link>
-
-              <Link
-                href="/projects"
-                className="rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                Projects
-              </Link>
-
-              <Link
-                href="/notes"
-                className="rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                Notes
-              </Link>
-
-              <Link
-                href="/settings"
-                className="rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                Settings
-              </Link>
-            </div>
-          </div>
-        )}
       </div>
     </header>
   );
