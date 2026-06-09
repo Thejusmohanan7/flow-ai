@@ -89,7 +89,7 @@ export default function Navbar() {
               {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
-            <UserButton afterSignOutUrl="/" />
+            <UserButton/>
           </div>
         </div>
 
