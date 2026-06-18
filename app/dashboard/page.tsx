@@ -1,18 +1,24 @@
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+"use client";
 
+import { useEffect, useState } from "react";
 import DashboardMain from "@/components/dashboard/DashboardMain";
 
-export default async function DashboardPage() {
-  try {
-    const res = await fetch("https://flow-ai.vercel.app/api/tasks", {
-      cache: "no-store",
-    });
+export default function DashboardPage() {
+  const [tasks, setTasks] = useState([]);
 
-    const data = await res.json();
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const res = await fetch("/api/tasks");
+        const data = await res.json();
+        setTasks(data.data || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-    return <DashboardMain tasks={data.data || []} />;
-  } catch (error) {
-    return <div>Failed to load</div>;
-  }
+    fetchTasks();
+  }, []);
+
+  return <DashboardMain tasks={tasks} />;
 }
