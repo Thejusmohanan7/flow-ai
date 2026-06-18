@@ -2,39 +2,51 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import Task from "@/models/Task";
 
+// ✅ REQUIRED for mongoose in Vercel
+export const runtime = "nodejs";
+
 export async function POST(req: Request) {
   try {
-    // ✅ CHECK ENV
-    console.log("MONGO URI:", process.env.MONGODB_URI);
-
-    // ✅ CONNECT DB DIRECTLY (no external function for now)
+    // ✅ CONNECT DB
     if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(process.env.MONGODB_URI!);
+      await mongoose.connect(process.env.MONGODB_URI as string);
       console.log("✅ DB Connected");
     }
 
     // ✅ PARSE BODY
-    const body = await req.json();
-    console.log("📦 BODY RECEIVED:", body);
+    const body: any = await req.json();
 
-    // ❗ BASIC VALIDATION
-    if (!body.title) {
-      throw new Error("Title is required");
+    // ✅ VALIDATION (fixed)
+    if (!body.title || body.title.trim() === "") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Title is required",
+        },
+        { status: 400 }
+      );
     }
 
     // ✅ CREATE TASK
     const task = await Task.create(body);
-    console.log("✅ CREATED:", task);
 
-    return NextResponse.json(task);
-
-  } catch (error: any) {
-    console.error("❌ REAL ERROR:", error); // 👈 MUST SHOW IN TERMINAL
-
+    // ✅ SUCCESS RESPONSE (FIXED)
     return NextResponse.json(
       {
-        error: error.message || "Unknown error",
-        stack: error.stack, // 👈 EXTRA DEBUG
+        success: true,
+        data: task,
+      },
+      { status: 201 }
+    );
+
+  } catch (error: any) {
+    console.error("❌ REAL ERROR:", error);
+
+    // ✅ CLEAN ERROR RESPONSE
+    return NextResponse.json(
+      {
+        success: false,
+        message: error.message || "Something went wrong",
       },
       { status: 500 }
     );

@@ -1,11 +1,27 @@
-import { connectDB } from "@/lib/mongodb";
-import Task from "@/models/Task";
+export const dynamic = "force-dynamic";
+
 import DashboardMain from "@/components/dashboard/DashboardMain";
 
 export default async function DashboardPage() {
-  await connectDB();
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/tasks`, {
+      cache: "no-store",
+    });
 
-  const tasks = await Task.find().sort({ createdAt: -1 });
+    const data = await res.json();
 
-  return <DashboardMain tasks={JSON.parse(JSON.stringify(tasks))} />;
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Failed to fetch tasks");
+    }
+
+    return <DashboardMain tasks={data.data} />;
+  } catch (error) {
+    console.error("Dashboard Error:", error);
+
+    return (
+      <div className="p-6 text-red-500">
+        Failed to load dashboard. Please try again.
+      </div>
+    );
+  }
 }
