@@ -2,19 +2,15 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import {
-  Sparkles,
-  Plus,
-  Trash2,
-  CalendarIcon,
-  Flag,
-} from "lucide-react";
+import { useRouter } from "next/navigation";
 
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { Textarea } from "../../../components/ui/textarea";
-import { Badge } from "../../../components/ui/badge";
-import { Separator } from "../../../components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+
+import { Sparkles, Plus, Trash2, Flag } from "lucide-react";
 
 const priorities = [
   { label: "Low", color: "bg-green-500" },
@@ -24,6 +20,8 @@ const priorities = [
 ];
 
 export default function CreateTaskPage() {
+  const router = useRouter();
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("Medium");
@@ -33,6 +31,8 @@ export default function CreateTaskPage() {
   const [subtaskInput, setSubtaskInput] = useState("");
   const [subtasks, setSubtasks] = useState<string[]>([]);
 
+  const [loading, setLoading] = useState(false);
+
   const addSubtask = () => {
     if (!subtaskInput.trim()) return;
     setSubtasks((prev) => [...prev, subtaskInput]);
@@ -41,27 +41,43 @@ export default function CreateTaskPage() {
 
   const handleSubmit = async () => {
     try {
+      setLoading(true);
+
       const formattedSubtasks = subtasks.map((task) => ({
         title: task,
         completed: false,
       }));
+
+      const payload = {
+        title,
+        description,
+        priority,
+        status,
+        dueDate,
+        subtasks: formattedSubtasks,
+      };
+
+      console.log("📦 Sending:", payload); // DEBUG
 
       const res = await fetch("/api/tasks", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          title,
-          description,
-          priority,
-          status,
-          dueDate,
-          subtasks: formattedSubtasks,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
+
+      // ❌ If API failed
+      if (!res.ok) {
+        console.error("❌ Failed:", data);
+        alert("Failed to create task");
+        setLoading(false);
+        return;
+      }
+
+      // ✅ SUCCESS
       console.log("✅ Task saved:", data);
 
       // Reset form
@@ -69,14 +85,22 @@ export default function CreateTaskPage() {
       setDescription("");
       setSubtasks([]);
       setSubtaskInput("");
+
+      // 👉 Redirect to dashboard
+      router.push("/dashboard");
+
     } catch (error) {
-      console.error("❌ Error saving task:", error);
+      console.error("❌ Error:", error);
+      alert("Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="mx-auto max-w-7xl p-4 md:p-8">
       <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
+        
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Create New Task</h1>
@@ -86,8 +110,10 @@ export default function CreateTaskPage() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
+
           {/* LEFT */}
           <div className="space-y-6 lg:col-span-2">
+
             {/* Task Details */}
             <div className="rounded-2xl border p-6">
               <h2 className="font-semibold text-lg mb-5">Task Details</h2>
@@ -178,7 +204,7 @@ export default function CreateTaskPage() {
             </div>
           </div>
 
-          {/* RIGHT SIDEBAR */}
+          {/* RIGHT */}
           <div className="space-y-6">
             <div className="rounded-2xl border p-6">
               <h2 className="font-semibold text-lg mb-5">Task Settings</h2>
@@ -211,7 +237,7 @@ export default function CreateTaskPage() {
               </div>
             </div>
 
-            {/* AI Assistant */}
+            {/* AI */}
             <div className="rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 p-6 text-white">
               <div className="flex items-center gap-2">
                 <Sparkles size={18} />
@@ -231,13 +257,13 @@ export default function CreateTaskPage() {
             <div className="flex justify-end gap-3">
               <Button variant="outline">Cancel</Button>
 
-              <Button onClick={handleSubmit}>
-                <Flag className="mr-2 h-4 w-4" />
-                Create Task
+              <Button onClick={handleSubmit} disabled={loading}>
+                {loading ? "Saving..." : "Create Task"}
               </Button>
             </div>
           </div>
         </div>
+
       </motion.div>
     </div>
   );
