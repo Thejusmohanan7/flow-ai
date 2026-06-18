@@ -4,67 +4,37 @@ import Task from "@/models/Task";
 
 export async function POST(req: Request) {
   try {
-    // Connect DB if not connected
+    // ✅ CHECK ENV
+    console.log("MONGO URI:", process.env.MONGODB_URI);
+
+    // ✅ CONNECT DB DIRECTLY (no external function for now)
     if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(process.env.MONGODB_URI as string);
+      await mongoose.connect(process.env.MONGODB_URI!);
+      console.log("✅ DB Connected");
     }
 
-    // Parse body
+    // ✅ PARSE BODY
     const body = await req.json();
+    console.log("📦 BODY RECEIVED:", body);
 
-    // Validation
-    if (!body.title || body.title.trim() === "") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Title is required",
-        },
-        { status: 400 }
-      );
+    // ❗ BASIC VALIDATION
+    if (!body.title) {
+      throw new Error("Title is required");
     }
 
-    // Create task
+    // ✅ CREATE TASK
     const task = await Task.create(body);
+    console.log("✅ CREATED:", task);
 
-    // Success response
-    return NextResponse.json(
-      {
-        success: true,
-        data: task,
-      },
-      { status: 201 }
-    );
+    return NextResponse.json(task);
 
   } catch (error: any) {
-    // Error response
+    console.error("❌ REAL ERROR:", error); // 👈 MUST SHOW IN TERMINAL
+
     return NextResponse.json(
       {
-        success: false,
-        message: error.message || "Something went wrong",
-      },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET() {
-  try {
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(process.env.MONGODB_URI as string);
-    }
-
-    const tasks = await Task.find().sort({ createdAt: -1 });
-
-    return NextResponse.json({
-      success: true,
-      data: tasks,
-    });
-
-  } catch (error: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: error.message,
+        error: error.message || "Unknown error",
+        stack: error.stack, // 👈 EXTRA DEBUG
       },
       { status: 500 }
     );
