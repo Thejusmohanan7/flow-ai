@@ -4,37 +4,67 @@ import Task from "@/models/Task";
 
 export async function POST(req: Request) {
   try {
-    // ✅ CHECK ENV
-    console.log("MONGO URI:", process.env.MONGODB_URI);
-
-    // ✅ CONNECT DB DIRECTLY (no external function for now)
+    // Connect DB if not connected
     if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(process.env.MONGODB_URI!);
-      console.log("✅ DB Connected");
+      await mongoose.connect(process.env.MONGODB_URI as string);
     }
 
-    // ✅ PARSE BODY
+    // Parse body
     const body = await req.json();
-    console.log("📦 BODY RECEIVED:", body);
 
-    // ❗ BASIC VALIDATION
-    if (!body.title) {
-      throw new Error("Title is required");
+    // Validation
+    if (!body.title || body.title.trim() === "") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Title is required",
+        },
+        { status: 400 }
+      );
     }
 
-    // ✅ CREATE TASK
+    // Create task
     const task = await Task.create(body);
-    console.log("✅ CREATED:", task);
 
-    return NextResponse.json(task);
-
-  } catch (error: any) {
-    console.error("❌ REAL ERROR:", error); // 👈 MUST SHOW IN TERMINAL
-
+    // Success response
     return NextResponse.json(
       {
-        error: error.message || "Unknown error",
-        stack: error.stack, // 👈 EXTRA DEBUG
+        success: true,
+        data: task,
+      },
+      { status: 201 }
+    );
+
+  } catch (error: any) {
+    // Error response
+    return NextResponse.json(
+      {
+        success: false,
+        message: error.message || "Something went wrong",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET() {
+  try {
+    if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(process.env.MONGODB_URI as string);
+    }
+
+    const tasks = await Task.find().sort({ createdAt: -1 });
+
+    return NextResponse.json({
+      success: true,
+      data: tasks,
+    });
+
+  } catch (error: any) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: error.message,
       },
       { status: 500 }
     );
