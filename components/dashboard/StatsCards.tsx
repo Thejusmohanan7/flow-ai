@@ -11,9 +11,9 @@ export default function StatsCards({ tasks }: Props) {
   const done = tasks.filter((t) => normalize(t.status) === "done").length;
 
   const Card = ({ title, value }: any) => (
-    <div className="bg-white p-4 rounded-xl border shadow-sm">
-      <p className="text-sm text-gray-500">{title}</p>
-      <p className="text-2xl font-bold">{value}</p>
+    <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+      <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
+      <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
     </div>
   );
 

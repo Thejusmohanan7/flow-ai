@@ -269,9 +269,8 @@ export default function CreateTaskPage() {
                           selected={date}
                           onSelect={(selected) => {
                             setDate(selected);
-                            setDueDate(selected?.toISOString() || "");
+                            setDueDate(selected ? format(selected, "yyyy-MM-dd") : "");
                           }}
-                          initialFocus
                         />
                       </PopoverContent>
                     </Popover>

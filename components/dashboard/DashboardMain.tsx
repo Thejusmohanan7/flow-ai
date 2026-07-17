@@ -56,7 +56,10 @@ const getDueDateInfo = (dueDate: string, status: string) => {
   });
 
   if (status === "Done") {
-    return { label: formatted, className: "bg-gray-100 text-gray-400" };
+    return {
+      label: formatted,
+      className: "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500",
+    };
   }
 
   if (diffDays < 0) {
@@ -71,7 +74,10 @@ const getDueDateInfo = (dueDate: string, status: string) => {
     return { label: `Due ${formatted}`, className: "bg-yellow-500 text-black" };
   }
 
-  return { label: formatted, className: "bg-gray-100 text-gray-600" };
+  return {
+    label: formatted,
+    className: "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300",
+  };
 };
 
 export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
@@ -194,17 +200,17 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search tasks..."
-          className="border p-2 rounded w-full"
+          className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 p-2 rounded w-full"
         />
 
         <select
-          className="border p-2 rounded"
+          className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-2 rounded"
           onChange={(e) => setFilter(e.target.value)}
         >
-          <option>All</option>
-          <option>Todo</option>
-          <option>In Progress</option>
-          <option>Done</option>
+          <option className="dark:bg-gray-800">All</option>
+          <option className="dark:bg-gray-800">Todo</option>
+          <option className="dark:bg-gray-800">In Progress</option>
+          <option className="dark:bg-gray-800">Done</option>
         </select>
       </div>
 
@@ -213,6 +219,10 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
           {sortedTasks.map((task) => {
             const dueDateInfo = getDueDateInfo(task.dueDate, task.status);
             const isEditing = editingId === task._id;
+            const titleColorClass =
+              task.status === "Done"
+                ? "line-through text-gray-400 dark:text-gray-500"
+                : "text-gray-900 dark:text-white";
 
             return (
               <motion.div
@@ -222,8 +232,10 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.97 }}
                 transition={{ duration: 0.2 }}
-                className={`bg-white border p-4 rounded-xl shadow-sm transition-colors duration-300 ${
-                  task.status === "Done" ? "border-green-500 bg-green-50" : ""
+                className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl shadow-sm transition-colors duration-300 ${
+                  task.status === "Done"
+                    ? "border-green-500 dark:border-green-500 bg-green-50 dark:bg-green-900/20"
+                    : ""
                 }`}
               >
                 {isEditing ? (
@@ -231,13 +243,13 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                     <input
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
-                      className="border p-2 rounded w-full text-lg font-semibold"
+                      className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-lg font-semibold"
                       placeholder="Task title"
                     />
                     <textarea
                       value={editDescription}
                       onChange={(e) => setEditDescription(e.target.value)}
-                      className="border p-2 rounded w-full text-sm text-gray-600"
+                      className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-sm"
                       rows={2}
                       placeholder="Description"
                     />
@@ -246,9 +258,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                   <>
                     <div className="flex items-center gap-2">
                       <h2
-                        className={`text-lg font-semibold transition-colors ${
-                          task.status === "Done" ? "line-through text-gray-400" : ""
-                        }`}
+                        className={`text-lg font-semibold transition-colors ${titleColorClass}`}
                       >
                         {task.title}
                       </h2>
@@ -268,7 +278,9 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                       </AnimatePresence>
                     </div>
 
-                    <p className="text-sm text-gray-600">{task.description}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      {task.description}
+                    </p>
 
                     {task.subtasks && task.subtasks.length > 0 && (
                       <ul className="mt-2 list-disc space-y-1 pl-5">
@@ -277,8 +289,8 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                             key={idx}
                             className={`text-sm ${
                               sub.completed
-                                ? "text-gray-400 line-through"
-                                : "text-gray-600"
+                                ? "text-gray-400 dark:text-gray-500 line-through"
+                                : "text-gray-600 dark:text-gray-300"
                             }`}
                           >
                             {sub.title}
@@ -290,11 +302,11 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                 )}
 
                 <div className="flex gap-2 mt-2 text-xs flex-wrap">
-                  <span className="px-2 py-1 bg-gray-100 rounded">
+                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded">
                     {task.priority}
                   </span>
 
-                  <span className="px-2 py-1 bg-gray-100 rounded">
+                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded">
                     {task.status}
                   </span>
 
@@ -320,7 +332,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                       </button>
                       <button
                         onClick={cancelEdit}
-                        className="px-3 py-1 text-xs border rounded hover:bg-gray-100 flex items-center gap-1"
+                        className="px-3 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-1"
                       >
                         <X size={12} />
                         Cancel
@@ -332,7 +344,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                         <button
                           key={s}
                           onClick={() => updateStatus(task, s)}
-                          className="px-2 py-1 text-xs border rounded hover:bg-gray-100"
+                          className="px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
                           {s}
                         </button>
@@ -340,7 +352,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
 
                       <button
                         onClick={() => startEdit(task)}
-                        className="px-2 py-1 text-xs border rounded hover:bg-gray-100 flex items-center gap-1"
+                        className="px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-1"
                       >
                         <Pencil size={12} />
                         Edit
