@@ -2,21 +2,49 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import Task from "@/models/Task";
 
-// ✅ REQUIRED for mongoose in Vercel
+// ✅ Ensure Node runtime (important for Mongoose)
 export const runtime = "nodejs";
 
+/* -------------------- DB CONNECT HELPER -------------------- */
+const connectDB = async () => {
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(process.env.MONGODB_URI as string);
+    console.log("✅ MongoDB Connected");
+  }
+};
+
+/* -------------------- GET TASKS -------------------- */
+export async function GET() {
+  try {
+    await connectDB();
+
+    const tasks = await Task.find().sort({ createdAt: -1 });
+
+    return NextResponse.json({
+      success: true,
+      data: tasks,
+    });
+  } catch (error: any) {
+    console.error("❌ GET ERROR:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: error.message || "Failed to fetch tasks",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/* -------------------- CREATE TASK -------------------- */
 export async function POST(req: Request) {
   try {
-    // ✅ CONNECT DB
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(process.env.MONGODB_URI as string);
-      console.log("✅ DB Connected");
-    }
+    await connectDB();
 
-    // ✅ PARSE BODY
-    const body: any = await req.json();
+    const body = await req.json();
 
-    // ✅ VALIDATION (fixed)
+    // ✅ Validation
     if (!body.title || body.title.trim() === "") {
       return NextResponse.json(
         {
@@ -27,10 +55,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ CREATE TASK
     const task = await Task.create(body);
 
-    // ✅ SUCCESS RESPONSE (FIXED)
     return NextResponse.json(
       {
         success: true,
@@ -38,11 +64,9 @@ export async function POST(req: Request) {
       },
       { status: 201 }
     );
-
   } catch (error: any) {
-    console.error("❌ REAL ERROR:", error);
+    console.error("❌ POST ERROR:", error);
 
-    // ✅ CLEAN ERROR RESPONSE
     return NextResponse.json(
       {
         success: false,
