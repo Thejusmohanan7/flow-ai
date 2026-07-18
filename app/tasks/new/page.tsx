@@ -24,6 +24,7 @@ import {
   Plus,
   Trash2,
   CalendarIcon,
+  ArrowLeft,
 } from "lucide-react";
 
 const priorities = [
@@ -50,12 +51,65 @@ export default function CreateTaskPage() {
   const [subtasks, setSubtasks] = useState<string[]>([]);
 
   const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const addSubtask = () => {
     const trimmed = subtaskInput.trim();
     if (!trimmed) return;
     setSubtasks((prev) => [...prev, trimmed]);
     setSubtaskInput("");
+  };
+
+  /* ---------------- AI SUGGEST ---------------- */
+  const handleAiSuggest = async () => {
+    if (!title.trim()) {
+      alert("Enter a task title first so AI has something to work with");
+      return;
+    }
+
+    try {
+      setAiLoading(true);
+
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, description }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "AI suggestion failed");
+        return;
+      }
+
+      if (data.description) {
+        if (
+          !description.trim() ||
+          confirm("Replace your current description with the AI suggestion?")
+        ) {
+          setDescription(data.description);
+        }
+      }
+
+      if (Array.isArray(data.subtasks) && data.subtasks.length > 0) {
+        setSubtasks((prev) => {
+          const existingLower = prev.map((s) => s.toLowerCase());
+          const newOnes = data.subtasks
+            .map((s: string) => s.trim())
+            .filter((s: string) => s && !existingLower.includes(s.toLowerCase()));
+          return [...prev, ...newOnes];
+        });
+      }
+
+      if (data.priority) {
+        setPriority(data.priority);
+      }
+    } catch (error) {
+      alert("Something went wrong getting AI suggestions");
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -108,7 +162,17 @@ export default function CreateTaskPage() {
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-7xl p-4 md:p-8">
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
-          
+
+          {/* BACK LINK */}
+          <button
+            type="button"
+            onClick={() => router.push("/dashboard")}
+            className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft size={15} />
+            Back to Dashboard
+          </button>
+
           {/* HEADER */}
           <div className="mb-10">
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
@@ -288,6 +352,15 @@ export default function CreateTaskPage() {
                 <p className="mt-3 text-sm text-muted-foreground">
                   Get AI-powered suggestions for your task.
                 </p>
+
+                <Button
+                  type="button"
+                  onClick={handleAiSuggest}
+                  disabled={aiLoading}
+                  className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {aiLoading ? "Thinking..." : "Suggest description & subtasks"}
+                </Button>
               </div>
             </div>
           </div>
