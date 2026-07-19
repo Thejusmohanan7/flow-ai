@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
+import { auth } from "@clerk/nextjs/server";
 import Task from "@/models/Task";
 
-// ✅ Ensure Node runtime (important for Mongoose)
 export const runtime = "nodejs";
 
-/* -------------------- DB CONNECT HELPER -------------------- */
 const connectDB = async () => {
   if (mongoose.connection.readyState === 0) {
     await mongoose.connect(process.env.MONGODB_URI as string);
@@ -18,7 +17,16 @@ export async function GET() {
   try {
     await connectDB();
 
-    const tasks = await Task.find().sort({ createdAt: -1 });
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const tasks = await Task.find({ userId }).sort({ createdAt: -1 });
 
     return NextResponse.json({
       success: true,
@@ -42,9 +50,17 @@ export async function POST(req: Request) {
   try {
     await connectDB();
 
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
 
-    // ✅ Validation
     if (!body.title || body.title.trim() === "") {
       return NextResponse.json(
         {
@@ -55,7 +71,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const task = await Task.create(body);
+    const task = await Task.create({ ...body, userId });
 
     return NextResponse.json(
       {
