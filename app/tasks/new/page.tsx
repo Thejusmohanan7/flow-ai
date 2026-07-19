@@ -25,6 +25,7 @@ import {
   Trash2,
   CalendarIcon,
   ArrowLeft,
+  Clock,
 } from "lucide-react";
 
 const priorities = [
@@ -36,6 +37,30 @@ const priorities = [
 
 const statuses = ["Todo", "In Progress", "Done"];
 
+const HOURS = Array.from({ length: 12 }, (_, i) => i + 1);
+const MINUTES = [0, 15, 30, 45];
+
+const parseDueTime = (time: string) => {
+  if (!time) return { hour24: null as number | null, minute: null as number | null };
+  const [h, m] = time.split(":").map(Number);
+  return { hour24: h, minute: m };
+};
+
+const buildDueTime = (hour12: number, minute: number, period: "AM" | "PM") => {
+  let hour24 = hour12 % 12;
+  if (period === "PM") hour24 += 12;
+  return `${hour24.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+};
+
+const formatDueTime = (time: string) => {
+  if (!time) return null;
+  const [hStr, mStr] = time.split(":");
+  const h = Number(hStr);
+  const period = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${mStr} ${period}`;
+};
+
 export default function CreateTaskPage() {
   const router = useRouter();
 
@@ -44,6 +69,7 @@ export default function CreateTaskPage() {
   const [priority, setPriority] = useState("Medium");
   const [status, setStatus] = useState("Todo");
   const [dueDate, setDueDate] = useState("");
+  const [dueTime, setDueTime] = useState("");
 
   const [date, setDate] = useState<Date | undefined>();
 
@@ -52,6 +78,10 @@ export default function CreateTaskPage() {
 
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+
+  const { hour24, minute } = parseDueTime(dueTime);
+  const hour12 = hour24 === null ? null : hour24 % 12 === 0 ? 12 : hour24 % 12;
+  const period: "AM" | "PM" = hour24 === null ? "AM" : hour24 >= 12 ? "PM" : "AM";
 
   const addSubtask = () => {
     const trimmed = subtaskInput.trim();
@@ -127,6 +157,7 @@ export default function CreateTaskPage() {
         priority,
         status,
         dueDate,
+        dueTime,
         subtasks: formattedSubtasks,
       };
 
@@ -336,6 +367,109 @@ export default function CreateTaskPage() {
                             setDueDate(selected ? format(selected, "yyyy-MM-dd") : "");
                           }}
                         />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* DUE TIME */}
+                  <div>
+                    <label className="text-sm font-medium">Due Time</label>
+
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="mt-2 w-full justify-start text-left font-normal bg-background border-border"
+                        >
+                          <Clock className="mr-2 h-4 w-4" />
+                          {formatDueTime(dueTime) || "Pick a time"}
+                        </Button>
+                      </PopoverTrigger>
+
+                      <PopoverContent className="w-72 p-4">
+                        <div className="space-y-4">
+                          <div>
+                            <p className="mb-2 text-xs font-medium text-muted-foreground">
+                              Hour
+                            </p>
+                            <div className="grid grid-cols-4 gap-1.5">
+                              {HOURS.map((h) => (
+                                <button
+                                  key={h}
+                                  type="button"
+                                  onClick={() =>
+                                    setDueTime(buildDueTime(h, minute ?? 0, period))
+                                  }
+                                  className={`rounded-md border py-1.5 text-sm transition-colors ${
+                                    hour12 === h
+                                      ? "border-blue-500 bg-blue-500/10 font-semibold text-blue-600"
+                                      : "border-border hover:bg-muted"
+                                  }`}
+                                >
+                                  {h}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="mb-2 text-xs font-medium text-muted-foreground">
+                              Minute
+                            </p>
+                            <div className="grid grid-cols-4 gap-1.5">
+                              {MINUTES.map((m) => (
+                                <button
+                                  key={m}
+                                  type="button"
+                                  onClick={() =>
+                                    setDueTime(buildDueTime(hour12 ?? 12, m, period))
+                                  }
+                                  className={`rounded-md border py-1.5 text-sm transition-colors ${
+                                    minute === m
+                                      ? "border-blue-500 bg-blue-500/10 font-semibold text-blue-600"
+                                      : "border-border hover:bg-muted"
+                                  }`}
+                                >
+                                  {m.toString().padStart(2, "0")}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="mb-2 text-xs font-medium text-muted-foreground">
+                              Period
+                            </p>
+                            <div className="grid grid-cols-2 gap-1.5">
+                              {(["AM", "PM"] as const).map((p) => (
+                                <button
+                                  key={p}
+                                  type="button"
+                                  onClick={() =>
+                                    setDueTime(buildDueTime(hour12 ?? 12, minute ?? 0, p))
+                                  }
+                                  className={`rounded-md border py-1.5 text-sm transition-colors ${
+                                    period === p
+                                      ? "border-blue-500 bg-blue-500/10 font-semibold text-blue-600"
+                                      : "border-border hover:bg-muted"
+                                  }`}
+                                >
+                                  {p}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {dueTime && (
+                            <button
+                              type="button"
+                              onClick={() => setDueTime("")}
+                              className="w-full text-center text-xs text-muted-foreground hover:underline underline-offset-2"
+                            >
+                              Clear time
+                            </button>
+                          )}
+                        </div>
                       </PopoverContent>
                     </Popover>
                   </div>

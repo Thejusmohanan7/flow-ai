@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Pencil, X, Calendar } from "lucide-react";
+import { Check, Pencil, X, Calendar, Timer, Plus, Trash2 } from "lucide-react";
 import StatsCards from "./StatsCards";
+
+type Subtask = { title: string; completed: boolean };
 
 type TaskType = {
   _id: string;
@@ -12,7 +14,8 @@ type TaskType = {
   priority: string;
   status: string;
   dueDate: string;
-  subtasks?: { title: string; completed: boolean }[];
+  dueTime?: string;
+  subtasks?: Subtask[];
 };
 
 /* ---------------- DATE HELPERS ---------------- */
@@ -27,6 +30,28 @@ const parseDateOnly = (dateStr: string): Date | null => {
   return isNaN(fallback.getTime()) ? null : fallback;
 };
 
+const parseDueDateTime = (dueDate: string, dueTime?: string): Date | null => {
+  const datePart = parseDateOnly(dueDate);
+  if (!datePart || !dueTime) return null;
+
+  const [h, m] = dueTime.split(":").map(Number);
+  if (isNaN(h) || isNaN(m)) return null;
+
+  const target = new Date(datePart);
+  target.setHours(h, m, 0, 0);
+  return target;
+};
+
+const formatTime12h = (dueTime?: string) => {
+  if (!dueTime) return null;
+  const [hStr, mStr] = dueTime.split(":");
+  const h = Number(hStr);
+  if (isNaN(h)) return null;
+  const period = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${mStr} ${period}`;
+};
+
 const isDueToday = (dueDate: string) => {
   const due = parseDateOnly(dueDate);
   if (!due) return false;
@@ -38,9 +63,12 @@ const isDueToday = (dueDate: string) => {
   );
 };
 
-const getDueDateInfo = (dueDate: string, status: string) => {
+const getDueDateInfo = (dueDate: string, dueTime: string | undefined, status: string) => {
   const due = parseDateOnly(dueDate);
   if (!due) return null;
+
+  const timeLabel = formatTime12h(dueTime);
+  const suffix = timeLabel ? ` · ${timeLabel}` : "";
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -57,28 +85,71 @@ const getDueDateInfo = (dueDate: string, status: string) => {
 
   if (status === "Done") {
     return {
-      label: formatted,
+      label: formatted + suffix,
       className: "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500",
     };
   }
 
   if (diffDays < 0) {
-    return { label: `Overdue Â· ${formatted}`, className: "bg-red-500 text-white" };
+    return {
+      label: `Overdue · ${formatted}${suffix}`,
+      className: "bg-red-500 text-white",
+    };
   }
 
   if (diffDays === 0) {
-    return { label: "Due Today", className: "bg-orange-500 text-white" };
+    return { label: `Due Today${suffix}`, className: "bg-orange-500 text-white" };
   }
 
   if (diffDays <= 2) {
-    return { label: `Due ${formatted}`, className: "bg-yellow-500 text-black" };
+    return { label: `Due ${formatted}${suffix}`, className: "bg-yellow-500 text-black" };
   }
 
   return {
-    label: formatted,
+    label: formatted + suffix,
     className: "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300",
   };
 };
+
+/* ---------------- LIVE COUNTDOWN ---------------- */
+function CountdownTimer({ target }: { target: Date }) {
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const diffMs = target.getTime() - now.getTime();
+
+  if (diffMs <= 0) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-500 text-white text-xs">
+        <Timer size={11} />
+        Overdue
+      </span>
+    );
+  }
+
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  let label: string;
+  if (days > 0) label = `${days}d ${hours}h left`;
+  else if (hours > 0) label = `${hours}h ${minutes}m left`;
+  else if (minutes > 0) label = `${minutes}m ${seconds}s left`;
+  else label = `${seconds}s left`;
+
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs">
+      <Timer size={11} />
+      {label}
+    </span>
+  );
+}
 
 export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
   const [taskList, setTaskList] = useState<TaskType[]>(tasks);
@@ -88,6 +159,10 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editDueDate, setEditDueDate] = useState("");
+  const [editDueTime, setEditDueTime] = useState("");
+  const [editSubtasks, setEditSubtasks] = useState<Subtask[]>([]);
+  const [editSubtaskInput, setEditSubtaskInput] = useState("");
 
   const filteredTasks = useMemo(() => {
     return taskList.filter((t) => {
@@ -150,16 +225,42 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
     }
   };
 
+  /* ---------------- INLINE EDIT ---------------- */
   const startEdit = (task: TaskType) => {
     setEditingId(task._id);
     setEditTitle(task.title);
     setEditDescription(task.description);
+    setEditDueDate(task.dueDate || "");
+    setEditDueTime(task.dueTime || "");
+    setEditSubtasks(task.subtasks ? task.subtasks.map((s) => ({ ...s })) : []);
+    setEditSubtaskInput("");
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setEditTitle("");
     setEditDescription("");
+    setEditDueDate("");
+    setEditDueTime("");
+    setEditSubtasks([]);
+    setEditSubtaskInput("");
+  };
+
+  const addEditSubtask = () => {
+    const trimmed = editSubtaskInput.trim();
+    if (!trimmed) return;
+    setEditSubtasks((prev) => [...prev, { title: trimmed, completed: false }]);
+    setEditSubtaskInput("");
+  };
+
+  const removeEditSubtask = (index: number) => {
+    setEditSubtasks((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateEditSubtaskTitle = (index: number, value: string) => {
+    setEditSubtasks((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, title: value } : s))
+    );
   };
 
   const saveEdit = async (task: TaskType) => {
@@ -167,6 +268,10 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
       alert("Title cannot be empty");
       return;
     }
+
+    const cleanedSubtasks = editSubtasks
+      .map((s) => ({ title: s.title.trim(), completed: s.completed }))
+      .filter((s) => s.title.length > 0);
 
     const res = await fetch(`/api/tasks/${task._id}`, {
       method: "PUT",
@@ -177,6 +282,9 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
         ...task,
         title: editTitle.trim(),
         description: editDescription.trim(),
+        dueDate: editDueDate,
+        dueTime: editDueTime,
+        subtasks: cleanedSubtasks,
       }),
     });
 
@@ -185,7 +293,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
       setTaskList((prev) =>
         prev.map((t) => (t._id === task._id ? data.data : t))
       );
-      setEditingId(null);
+      cancelEdit();
     } else {
       alert("Failed to update task");
     }
@@ -217,7 +325,8 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
       <div className="grid gap-4">
         <AnimatePresence>
           {sortedTasks.map((task) => {
-            const dueDateInfo = getDueDateInfo(task.dueDate, task.status);
+            const dueDateInfo = getDueDateInfo(task.dueDate, task.dueTime, task.status);
+            const countdownTarget = parseDueDateTime(task.dueDate, task.dueTime);
             const isEditing = editingId === task._id;
             const titleColorClass =
               task.status === "Done"
@@ -239,20 +348,104 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                 }`}
               >
                 {isEditing ? (
-                  <div className="space-y-2">
-                    <input
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-lg font-semibold"
-                      placeholder="Task title"
-                    />
-                    <textarea
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                      className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-sm"
-                      rows={2}
-                      placeholder="Description"
-                    />
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Title
+                      </label>
+                      <input
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        className="mt-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-lg font-semibold"
+                        placeholder="Task title"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Description
+                      </label>
+                      <textarea
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        className="mt-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-sm"
+                        rows={2}
+                        placeholder="Description"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                          Due Date
+                        </label>
+                        <input
+                          type="date"
+                          value={editDueDate}
+                          onChange={(e) => setEditDueDate(e.target.value)}
+                          className="mt-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-sm"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                          Due Time
+                        </label>
+                        <input
+                          type="time"
+                          value={editDueTime}
+                          onChange={(e) => setEditDueTime(e.target.value)}
+                          className="mt-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Subtasks
+                      </label>
+
+                      <div className="mt-1 space-y-2">
+                        {editSubtasks.map((sub, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <input
+                              value={sub.title}
+                              onChange={(e) => updateEditSubtaskTitle(idx, e.target.value)}
+                              className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-1.5 rounded text-sm"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeEditSubtask(idx)}
+                              className="text-red-500 hover:text-red-600 shrink-0"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        ))}
+
+                        <div className="flex items-center gap-2">
+                          <input
+                            value={editSubtaskInput}
+                            onChange={(e) => setEditSubtaskInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                addEditSubtask();
+                              }
+                            }}
+                            placeholder="Add subtask"
+                            className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-1.5 rounded text-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={addEditSubtask}
+                            className="shrink-0 rounded bg-gray-900 dark:bg-gray-700 p-1.5 text-white"
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <>
@@ -317,6 +510,10 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                       <Calendar size={11} />
                       {dueDateInfo.label}
                     </span>
+                  )}
+
+                  {countdownTarget && task.status !== "Done" && (
+                    <CountdownTimer target={countdownTarget} />
                   )}
                 </div>
 
