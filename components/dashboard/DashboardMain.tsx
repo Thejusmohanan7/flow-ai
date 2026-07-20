@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Pencil, X, Calendar, Timer, Plus, Trash2 } from "lucide-react";
+import { Check, Pencil, X, Calendar, Timer, Plus, Trash2, ChevronDown } from "lucide-react";
 import StatsCards from "./StatsCards";
 
 type Subtask = { title: string; completed: boolean };
@@ -148,6 +148,78 @@ function CountdownTimer({ target }: { target: Date }) {
       <Timer size={11} />
       {label}
     </span>
+  );
+}
+
+/* ---------------- CUSTOM FILTER DROPDOWN ---------------- */
+const FILTER_OPTIONS = ["All", "Todo", "In Progress", "Done"];
+
+function FilterDropdown({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center justify-between gap-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white pl-3 pr-2.5 py-2 rounded-lg font-sans text-sm shadow-sm hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-colors cursor-pointer w-[6.5rem] sm:w-32"
+      >
+        <span className="truncate">{value}</span>
+        <ChevronDown
+          size={14}
+          className={`shrink-0 text-gray-400 dark:text-gray-500 transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.12 }}
+            className="absolute right-0 z-50 mt-1 w-40 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg"
+          >
+            {FILTER_OPTIONS.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => {
+                  onChange(opt);
+                  setOpen(false);
+                }}
+                className={`block w-full px-3 py-2 text-left text-sm font-sans transition-colors ${
+                  opt === value
+                    ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium"
+                    : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                }`}
+              >
+                {opt}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -303,23 +375,15 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
     <div>
       <StatsCards tasks={taskList} />
 
-      <div className="flex gap-3 mb-6">
+      <div className="flex flex-row gap-2 sm:gap-3 mb-6">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search tasks..."
-          className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 p-2 rounded w-full font-sans"
+          className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 p-2 rounded-lg w-full font-sans min-w-0"
         />
 
-        <select
-          className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-2 rounded font-sans"
-          onChange={(e) => setFilter(e.target.value)}
-        >
-          <option className="dark:bg-gray-800">All</option>
-          <option className="dark:bg-gray-800">Todo</option>
-          <option className="dark:bg-gray-800">In Progress</option>
-          <option className="dark:bg-gray-800">Done</option>
-        </select>
+        <FilterDropdown value={filter} onChange={setFilter} />
       </div>
 
       <div className="grid gap-4">
@@ -341,7 +405,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.97 }}
                 transition={{ duration: 0.2 }}
-                className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl shadow-sm transition-colors duration-300 ${
+                className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 sm:p-4 rounded-xl shadow-sm transition-colors duration-300 overflow-hidden ${
                   task.status === "Done"
                     ? "border-green-500 dark:border-green-500 bg-green-50 dark:bg-green-900/20"
                     : ""
@@ -374,7 +438,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="text-xs font-medium text-gray-500 dark:text-gray-400 font-sans">
                           Due Date
@@ -411,7 +475,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                             <input
                               value={sub.title}
                               onChange={(e) => updateEditSubtaskTitle(idx, e.target.value)}
-                              className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-1.5 rounded text-sm font-sans"
+                              className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-1.5 rounded text-sm font-sans min-w-0"
                             />
                             <button
                               type="button"
@@ -434,7 +498,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                               }
                             }}
                             placeholder="Add subtask"
-                            className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-1.5 rounded text-sm font-sans"
+                            className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-1.5 rounded text-sm font-sans min-w-0"
                           />
                           <button
                             type="button"
@@ -449,9 +513,9 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h2
-                        className={`text-lg font-semibold font-heading tracking-tight transition-colors ${titleColorClass}`}
+                        className={`text-lg font-semibold font-heading tracking-tight transition-colors break-words ${titleColorClass}`}
                       >
                         {task.title}
                       </h2>
@@ -463,7 +527,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                             animate={{ scale: 1, rotate: 0, opacity: 1 }}
                             exit={{ scale: 0, opacity: 0 }}
                             transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                            className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white"
+                            className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white shrink-0"
                           >
                             <Check size={12} />
                           </motion.span>
@@ -471,7 +535,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                       </AnimatePresence>
                     </div>
 
-                    <p className="text-sm text-gray-600 dark:text-gray-300 font-sans">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 font-sans break-words">
                       {task.description}
                     </p>
 
@@ -480,7 +544,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                         {task.subtasks.map((sub, idx) => (
                           <li
                             key={idx}
-                            className={`text-sm font-sans ${
+                            className={`text-sm font-sans break-words ${
                               sub.completed
                                 ? "text-gray-400 dark:text-gray-500 line-through"
                                 : "text-gray-600 dark:text-gray-300"

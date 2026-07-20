@@ -113,12 +113,12 @@ export default function StatsCards({ tasks }: Props) {
               </p>
             </div>
 
-            <p className="mt-3 text-2xl font-bold text-gray-900 dark:text-white md:text-3xl">
+            <p className="mt-3 ml-3 text-2xl font-bold text-gray-900 dark:text-white md:text-3xl">
               {card.value}
             </p>
 
             {card.trend && (
-              <p className={`mt-1 text-xs font-medium ${colors.trend}`}>
+              <p className={`mt-1 ml-3 text-xs font-medium ${colors.trend}`}>
                 {card.trend}
               </p>
             )}
