@@ -1,25 +1,88 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import {
-  Search,
-  Bell,
   Plus,
   Menu,
   X,
   Moon,
   Sun,
-  Command,
+  AlarmClock,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { AnimatePresence, motion } from "framer-motion";
 import clsx from "clsx";
+
+const navItems = [
+  { name: "Dashboard", href: "/dashboard" },
+  { name: "Tasks", href: "/tasks" },
+  { name: "Projects", href: "/projects" },
+  { name: "Notes", href: "/notes" },
+  { name: "AI Hub", href: "/ai-hub" },
+  { name: "Calendar", href: "/calendar" },
+];
+
+type TaskType = {
+  status: string;
+  dueDate: string;
+};
+
+const parseDateOnly = (dateStr: string): Date | null => {
+  if (!dateStr) return null;
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const [y, m, d] = parts.map(Number);
+    if (y && m && d) return new Date(y, m - 1, d);
+  }
+  const fallback = new Date(dateStr);
+  return isNaN(fallback.getTime()) ? null : fallback;
+};
+
+const isDueToday = (dueDate: string) => {
+  const due = parseDateOnly(dueDate);
+  if (!due) return false;
+  const today = new Date();
+  return (
+    due.getFullYear() === today.getFullYear() &&
+    due.getMonth() === today.getMonth() &&
+    due.getDate() === today.getDate()
+  );
+};
 
 export default function Navbar() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const { theme, setTheme } = useTheme();
+  const pathname = usePathname();
+
+  const [dueTodayCount, setDueTodayCount] = useState(0);
+
+  useEffect(() => {
+    const fetchDueToday = async () => {
+      try {
+        const res = await fetch("/api/tasks");
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const tasks: TaskType[] = data.data || [];
+
+        const count = tasks.filter(
+          (t) => t.status !== "Done" && isDueToday(t.dueDate)
+        ).length;
+
+        setDueTodayCount(count);
+      } catch (error) {
+        console.error("❌ Navbar due-today fetch error:", error);
+      }
+    };
+
+    fetchDueToday();
+    const interval = setInterval(fetchDueToday, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl">
@@ -38,30 +101,12 @@ export default function Navbar() {
               <Image
                 src="/logo.png"
                 alt="FlowAI"
-                width={180}
-                height={80}
-                className="h-22 w-auto object-contain"
+                width={140}
+                height={40}
+                className="h-10 w-auto object-contain"
                 priority
               />
             </Link>
-          </div>
-
-          {/* Search */}
-          <div className="hidden lg:flex flex-1 max-w-xl items-center justify-center">
-            <div className="flex items-center gap-3 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition">
-              <Search size={16} className="text-slate-500" />
-
-              <input
-                type="text"
-                placeholder="Search tasks, projects..."
-                className="flex-1 bg-transparent outline-none text-sm placeholder:text-slate-500"
-              />
-
-              <span className="flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-1 text-xs text-slate-500">
-                <Command size={12} />
-                K
-              </span>
-            </div>
           </div>
 
           {/* Right Section */}
@@ -77,33 +122,40 @@ export default function Navbar() {
 
             {/* Mobile New Task */}
             <Link
-              href="/dashboard/tasks/new"
+              href="/tasks/new"
               className="sm:hidden rounded-lg bg-blue-600 p-2 text-white"
             >
               <Plus size={18} />
             </Link>
 
-            {/* Notifications */}
-            <div className="relative">
-              <button className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                <Bell size={20} />
-              </button>
-
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
-            </div>
+            {/* Live "due today" indicator */}
+            {dueTodayCount > 0 && (
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-1.5 rounded-full border border-orange-200 dark:border-orange-900/50 bg-orange-50 dark:bg-orange-900/20 px-3 py-1.5 text-xs font-medium text-orange-700 dark:text-orange-300 transition-colors hover:bg-orange-100 dark:hover:bg-orange-900/30"
+              >
+                <AlarmClock size={14} />
+                {dueTodayCount} due today
+              </Link>
+            )}
 
             {/* Theme Toggle */}
             <button
-              onClick={() =>
-                setTheme(theme === "dark" ? "light" : "dark")
-              }
-              className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="relative rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
             >
-              {theme === "dark" ? (
-                <Sun size={18} />
-              ) : (
-                <Moon size={18} />
-              )}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={theme}
+                  initial={{ rotate: -90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 90, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="flex"
+                >
+                  {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+                </motion.span>
+              </AnimatePresence>
             </button>
 
             {/* User Profile */}
@@ -118,37 +170,25 @@ export default function Navbar() {
             mobileMenu ? "max-h-96 py-4" : "max-h-0"
           )}
         >
-          {/* Mobile Search */}
-          <div className="mb-4">
-            <div className="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2">
-              <Search size={16} className="text-slate-500" />
-
-              <input
-                type="text"
-                placeholder="Search..."
-                className="flex-1 bg-transparent outline-none text-sm"
-              />
-            </div>
-          </div>
-
-          {/* Mobile Navigation */}
           <div className="flex flex-col gap-2">
-            {[
-              { name: "Dashboard", href: "/dashboard" },
-              { name: "Tasks", href: "/dashboard/tasks" },
-              { name: "Projects", href: "/dashboard/projects" },
-              { name: "Analytics", href: "/dashboard/analytics" },
-              { name: "Settings", href: "/dashboard/settings" },
-            ].map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={() => setMobileMenu(false)}
-                className="rounded-xl px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                {item.name}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => setMobileMenu(false)}
+                  className={clsx(
+                    "rounded-xl px-3 py-2 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-blue-600 text-white"
+                      : "hover:bg-slate-100 dark:hover:bg-slate-800"
+                  )}
+                >
+                  {item.name}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </div>

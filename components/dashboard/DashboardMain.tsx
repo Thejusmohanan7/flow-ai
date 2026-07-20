@@ -124,7 +124,7 @@ function CountdownTimer({ target }: { target: Date }) {
 
   if (diffMs <= 0) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-500 text-white text-xs">
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-500 text-white text-xs font-mono">
         <Timer size={11} />
         Overdue
       </span>
@@ -144,7 +144,7 @@ function CountdownTimer({ target }: { target: Date }) {
   else label = `${seconds}s left`;
 
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs">
+    <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-mono">
       <Timer size={11} />
       {label}
     </span>
@@ -308,11 +308,11 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search tasks..."
-          className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 p-2 rounded w-full"
+          className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 p-2 rounded w-full font-sans"
         />
 
         <select
-          className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-2 rounded"
+          className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-2 rounded font-sans"
           onChange={(e) => setFilter(e.target.value)}
         >
           <option className="dark:bg-gray-800">All</option>
@@ -350,25 +350,25 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                 {isEditing ? (
                   <div className="space-y-3">
                     <div>
-                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 font-sans">
                         Title
                       </label>
                       <input
                         value={editTitle}
                         onChange={(e) => setEditTitle(e.target.value)}
-                        className="mt-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-lg font-semibold"
+                        className="mt-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-lg font-semibold font-heading"
                         placeholder="Task title"
                       />
                     </div>
 
                     <div>
-                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 font-sans">
                         Description
                       </label>
                       <textarea
                         value={editDescription}
                         onChange={(e) => setEditDescription(e.target.value)}
-                        className="mt-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-sm"
+                        className="mt-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-sm font-sans"
                         rows={2}
                         placeholder="Description"
                       />
@@ -376,32 +376,32 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        <label className="text-xs font-medium text-gray-500 dark:text-gray-400 font-sans">
                           Due Date
                         </label>
                         <input
                           type="date"
                           value={editDueDate}
                           onChange={(e) => setEditDueDate(e.target.value)}
-                          className="mt-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-sm"
+                          className="mt-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-sm font-mono"
                         />
                       </div>
 
                       <div>
-                        <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        <label className="text-xs font-medium text-gray-500 dark:text-gray-400 font-sans">
                           Due Time
                         </label>
                         <input
                           type="time"
                           value={editDueTime}
                           onChange={(e) => setEditDueTime(e.target.value)}
-                          className="mt-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-sm"
+                          className="mt-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-sm font-mono"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 font-sans">
                         Subtasks
                       </label>
 
@@ -411,7 +411,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                             <input
                               value={sub.title}
                               onChange={(e) => updateEditSubtaskTitle(idx, e.target.value)}
-                              className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-1.5 rounded text-sm"
+                              className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-1.5 rounded text-sm font-sans"
                             />
                             <button
                               type="button"
@@ -434,7 +434,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                               }
                             }}
                             placeholder="Add subtask"
-                            className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-1.5 rounded text-sm"
+                            className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-1.5 rounded text-sm font-sans"
                           />
                           <button
                             type="button"
@@ -451,7 +451,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                   <>
                     <div className="flex items-center gap-2">
                       <h2
-                        className={`text-lg font-semibold transition-colors ${titleColorClass}`}
+                        className={`text-lg font-semibold font-heading tracking-tight transition-colors ${titleColorClass}`}
                       >
                         {task.title}
                       </h2>
@@ -471,7 +471,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                       </AnimatePresence>
                     </div>
 
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 font-sans">
                       {task.description}
                     </p>
 
@@ -480,7 +480,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                         {task.subtasks.map((sub, idx) => (
                           <li
                             key={idx}
-                            className={`text-sm ${
+                            className={`text-sm font-sans ${
                               sub.completed
                                 ? "text-gray-400 dark:text-gray-500 line-through"
                                 : "text-gray-600 dark:text-gray-300"
@@ -495,17 +495,17 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                 )}
 
                 <div className="flex gap-2 mt-2 text-xs flex-wrap">
-                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded">
+                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded font-sans">
                     {task.priority}
                   </span>
 
-                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded">
+                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded font-sans">
                     {task.status}
                   </span>
 
                   {dueDateInfo && (
                     <span
-                      className={`px-2 py-1 rounded flex items-center gap-1 ${dueDateInfo.className}`}
+                      className={`px-2 py-1 rounded flex items-center gap-1 font-mono ${dueDateInfo.className}`}
                     >
                       <Calendar size={11} />
                       {dueDateInfo.label}
@@ -522,14 +522,14 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                     <>
                       <button
                         onClick={() => saveEdit(task)}
-                        className="px-3 py-1 text-xs bg-green-500 text-white rounded flex items-center gap-1"
+                        className="px-3 py-1 text-xs bg-green-500 text-white rounded flex items-center gap-1 font-sans"
                       >
                         <Check size={12} />
                         Save
                       </button>
                       <button
                         onClick={cancelEdit}
-                        className="px-3 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-1"
+                        className="px-3 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-1 font-sans"
                       >
                         <X size={12} />
                         Cancel
@@ -541,7 +541,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                         <button
                           key={s}
                           onClick={() => updateStatus(task, s)}
-                          className="px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                          className="px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700 font-sans"
                         >
                           {s}
                         </button>
@@ -549,7 +549,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
 
                       <button
                         onClick={() => startEdit(task)}
-                        className="px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-1"
+                        className="px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-1 font-sans"
                       >
                         <Pencil size={12} />
                         Edit
@@ -557,7 +557,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
 
                       <button
                         onClick={() => deleteTask(task._id)}
-                        className="px-3 py-1 text-xs bg-red-500 text-white rounded"
+                        className="px-3 py-1 text-xs bg-red-500 text-white rounded font-sans"
                       >
                         Delete
                       </button>
