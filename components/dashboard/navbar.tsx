@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -12,6 +12,9 @@ import {
   Moon,
   Sun,
   AlarmClock,
+  ListChecks,
+  StickyNote,
+  ChevronDown,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { AnimatePresence, motion } from "framer-motion";
@@ -60,6 +63,10 @@ export default function Navbar() {
 
   const [dueTodayCount, setDueTodayCount] = useState(0);
 
+  const [desktopCreateOpen, setDesktopCreateOpen] = useState(false);
+  const [mobileCreateOpen, setMobileCreateOpen] = useState(false);
+  const mobileCreateRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const fetchDueToday = async () => {
       try {
@@ -82,6 +89,19 @@ export default function Navbar() {
     fetchDueToday();
     const interval = setInterval(fetchDueToday, 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        mobileCreateRef.current &&
+        !mobileCreateRef.current.contains(e.target as Node)
+      ) {
+        setMobileCreateOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -111,22 +131,92 @@ export default function Navbar() {
 
           {/* Right Section */}
           <div className="flex items-center gap-2 md:gap-3">
-            {/* Desktop New Task */}
-            <Link
-              href="/tasks/new"
-              className="hidden sm:flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-md transition-all hover:scale-105"
+            {/* Desktop Create */}
+            <div
+              className="relative hidden sm:block"
+              onMouseEnter={() => setDesktopCreateOpen(true)}
+              onMouseLeave={() => setDesktopCreateOpen(false)}
             >
-              <Plus size={16} />
-              New Task
-            </Link>
+              <button
+                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-md transition-all hover:scale-105"
+              >
+                <Plus size={16} />
+                Create
+                <ChevronDown
+                  size={14}
+                  className={clsx(
+                    "transition-transform",
+                    desktopCreateOpen && "rotate-180"
+                  )}
+                />
+              </button>
 
-            {/* Mobile New Task */}
-            <Link
-              href="/tasks/new"
-              className="sm:hidden rounded-lg bg-blue-600 p-2 text-white"
-            >
-              <Plus size={18} />
-            </Link>
+              <AnimatePresence>
+                {desktopCreateOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.12 }}
+                    className="absolute right-0 top-full w-44 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg"
+                  >
+                    <Link
+                      href="/tasks/new"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      <ListChecks size={15} />
+                      Task
+                    </Link>
+                    <Link
+                      href="/notes/new"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      <StickyNote size={15} />
+                      Note
+                    </Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Mobile Create */}
+            <div className="relative sm:hidden" ref={mobileCreateRef}>
+              <button
+                onClick={() => setMobileCreateOpen((o) => !o)}
+                className="rounded-lg bg-blue-600 p-2 text-white"
+              >
+                <Plus size={18} />
+              </button>
+
+              <AnimatePresence>
+                {mobileCreateOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.12 }}
+                    className="absolute right-0 top-full mt-2 w-40 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg z-50"
+                  >
+                    <Link
+                      href="/tasks/new"
+                      onClick={() => setMobileCreateOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      <ListChecks size={15} />
+                      Task
+                    </Link>
+                    <Link
+                      href="/notes/new"
+                      onClick={() => setMobileCreateOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      <StickyNote size={15} />
+                      Note
+                    </Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Live "due today" indicator */}
             {dueTodayCount > 0 && (
