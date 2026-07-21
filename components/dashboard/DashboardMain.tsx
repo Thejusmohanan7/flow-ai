@@ -373,7 +373,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
 
   return (
     <div>
-      <StatsCards tasks={taskList} />
+      {/* <StatsCards tasks={taskList} /> */}
 
       <div className="flex flex-row gap-2 sm:gap-3 mb-6">
         <input

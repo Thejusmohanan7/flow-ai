@@ -217,9 +217,9 @@ export default function NotesMain({ notes }: { notes: NoteType[] }) {
 
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold font-heading tracking-tight text-gray-900 dark:text-white sm:text-2xl">
+          {/* <h1 className="text-xl font-bold font-heading tracking-tight text-gray-900 dark:text-white sm:text-2xl">
             Notes
-          </h1>
+          </h1> */}
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 font-sans">
             {noteList.length} {noteList.length === 1 ? "note" : "notes"}
           </p>

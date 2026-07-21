@@ -20,9 +20,9 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
 
   const menuItems = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Tasks", href: "/tasks", icon: CheckSquare },
-    { name: "Projects", href: "/projects", icon: FolderKanban },
+    { name: "Dashboard", href: "", icon: LayoutDashboard },
+    { name: "Tasks", href: "/dashboard", icon: CheckSquare },
+    { name: "Workspaces", href: "/projects", icon: FolderKanban },
     { name: "Notes", href: "/notes", icon: FileText },
   ];
 
