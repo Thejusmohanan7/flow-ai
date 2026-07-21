@@ -368,12 +368,12 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
       cancelEdit();
     } else {
       alert("Failed to update task");
-    }
+    } 
   };
 
   return (
     <div>
-      {/* <StatsCards tasks={taskList} /> */}
+      <StatsCards tasks={taskList} />
 
       <div className="flex flex-row gap-2 sm:gap-3 mb-6">
         <input
