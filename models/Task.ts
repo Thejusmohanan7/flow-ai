@@ -11,6 +11,8 @@ const TaskSchema = new mongoose.Schema(
     dueDate: String,
     dueTime: String,
 
+    completedAt: Date,
+
     subtasks: [
       {
         title: String,
