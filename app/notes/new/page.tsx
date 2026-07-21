@@ -100,11 +100,15 @@ export default function NewNotePage() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFiles((prev) => [...prev, ...Array.from(e.target.files)]);
-    }
-  };
+ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const fileList = e.target.files;
+
+  if (!fileList || fileList.length === 0) return;
+
+  const newFiles = Array.from(fileList);
+
+  setFiles((prev) => [...prev, ...newFiles]);
+};
 
   const preview = previewStyle[color] || previewStyle.gray;
 
