@@ -115,20 +115,6 @@ export default function WorkspacePage() {
     <div className="space-y-8">
       {/* HEADER */}
       <div className="flex items-center justify-between">
-        {/* <div>
-          <h1
-            className="text-3xl font-bold tracking-tight 
-            bg-gradient-to-r from-indigo-500 to-purple-500 
-            bg-clip-text text-transparent"
-          >
-            Workspace
-          </h1>
-
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Your productivity hub 
-          </p>
-        </div> */}
-
         <div
           className="text-xs px-3 py-1 rounded-full 
           bg-gray-100 dark:bg-white/10 text-gray-500"
@@ -242,7 +228,7 @@ export default function WorkspacePage() {
              Today’s Focus
           </h2>
 
-          <div className="space-y-3">
+          <div className="space-y-3 min-h-[120px] transition-all duration-200">
             {filteredTasks.length === 0 ? (
               <p className="text-sm text-gray-500">
                 No tasks found
@@ -278,7 +264,7 @@ export default function WorkspacePage() {
              Recent Notes
           </h2>
 
-          <div className="space-y-3">
+          <div className="space-y-3 min-h-[120px] transition-all duration-200">
             {filteredNotes.length === 0 ? (
               <p className="text-sm text-gray-500">
                 No notes found
