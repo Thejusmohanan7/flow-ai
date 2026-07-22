@@ -21,11 +21,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import clsx from "clsx";
 
 const navItems = [
-  { name: "Dashboard", href: "/dashboard" },
-  { name: "Tasks", href: "/tasks" },
-  { name: "Projects", href: "/projects" },
+  { name: "Dashboard", href: "/home" },
+  { name: "Tasks", href: "/dashboard" },
+  { name: "Workspace", href: "/workspace" },
   { name: "Notes", href: "/notes" },
-  { name: "AI Hub", href: "/ai-hub" },
   { name: "Calendar", href: "/calendar" },
 ];
 

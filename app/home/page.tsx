@@ -115,7 +115,7 @@ export default function WorkspacePage() {
     <div className="space-y-8">
       {/* HEADER */}
       <div className="flex items-center justify-between">
-        <div>
+        {/* <div>
           <h1
             className="text-3xl font-bold tracking-tight 
             bg-gradient-to-r from-indigo-500 to-purple-500 
@@ -125,9 +125,9 @@ export default function WorkspacePage() {
           </h1>
 
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Your productivity hub ⚡
+            Your productivity hub 
           </p>
-        </div>
+        </div> */}
 
         <div
           className="text-xs px-3 py-1 rounded-full 
@@ -139,13 +139,13 @@ export default function WorkspacePage() {
 
       {/* SEARCH */}
       <div className="relative max-w-md">
-        <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+        <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
 
         <Input
           placeholder="Search tasks & notes..."
           value={query}
           onChange={(e: any) => setQuery(e.target.value)}
-          className="pl-9"
+          className="ml-10"
         />
       </div>
 
@@ -178,7 +178,7 @@ export default function WorkspacePage() {
 
         <Card>
           <CardContent>
-            <p className="text-xs text-gray-500">Daily Streak 🔥</p>
+            <p className="text-xs text-gray-500">Daily Streak </p>
             <h2 className="text-2xl font-semibold text-orange-500 mt-1">
               {streak} days
             </h2>
@@ -239,7 +239,7 @@ export default function WorkspacePage() {
         {/* TASKS */}
         <div>
           <h2 className="text-lg font-semibold text-indigo-500 mb-3">
-            🔥 Today’s Focus
+             Today’s Focus
           </h2>
 
           <div className="space-y-3">
@@ -275,7 +275,7 @@ export default function WorkspacePage() {
         {/* NOTES */}
         <div>
           <h2 className="text-lg font-semibold text-purple-500 mb-3">
-            📝 Recent Notes
+             Recent Notes
           </h2>
 
           <div className="space-y-3">

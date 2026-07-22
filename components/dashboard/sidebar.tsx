@@ -27,7 +27,6 @@ export default function Sidebar() {
   ];
 
   const toolsItems = [
-    { name: "AI Hub", href: "/ai", icon: Bot },
     { name: "Calendar", href: "/calendar", icon: Calendar },
   ];
 
