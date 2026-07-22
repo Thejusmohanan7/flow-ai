@@ -105,10 +105,10 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl">
-      <div className="px-4 md:px-6">
-        <div className="flex h-16 items-center justify-between gap-4">
+      <div className="px-2 md:px-2">
+        <div className="flex h-16 items-center justify-between">
           {/* Left Section */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center">
             <button
               onClick={() => setMobileMenu(!mobileMenu)}
               className="md:hidden rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -120,9 +120,9 @@ export default function Navbar() {
               <Image
                 src="/logo.png"
                 alt="FlowAI"
-                width={140}
+                width={100}
                 height={40}
-                className="h-10 w-auto object-contain"
+                className="h-20 w-auto object-contain"
                 priority
               />
             </Link>
