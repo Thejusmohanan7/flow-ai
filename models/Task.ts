@@ -11,6 +11,8 @@ const TaskSchema = new mongoose.Schema(
     dueDate: String,
     dueTime: String,
 
+    activeSince: Date,
+    totalActiveMs: Number,
     completedAt: Date,
 
     subtasks: [
@@ -23,5 +25,4 @@ const TaskSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.Task ||
-  mongoose.model("Task", TaskSchema);
+export default mongoose.models.Task || mongoose.model("Task", TaskSchema);

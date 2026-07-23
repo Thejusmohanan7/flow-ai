@@ -1,8 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Pencil, X, Calendar, Timer, Plus, Trash2, ChevronDown } from "lucide-react";
+import {
+  Check,
+  Pencil,
+  X,
+  Calendar,
+  Timer,
+  Plus,
+  Trash2,
+  Clock,
+  Pause,
+  ChevronDown,
+} from "lucide-react";
 import StatsCards from "./StatsCards";
 
 type Subtask = { title: string; completed: boolean };
@@ -16,7 +27,12 @@ type TaskType = {
   dueDate: string;
   dueTime?: string;
   subtasks?: Subtask[];
+  activeSince?: string | null;
+  totalActiveMs?: number;
+  completedAt?: string | null;
 };
+
+const statusOptions = ["Todo", "In Progress", "Paused", "Done"];
 
 /* ---------------- DATE HELPERS ---------------- */
 const parseDateOnly = (dateStr: string): Date | null => {
@@ -87,6 +103,7 @@ const getDueDateInfo = (dueDate: string, dueTime: string | undefined, status: st
     return {
       label: formatted + suffix,
       className: "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500",
+      isOverdue: false,
     };
   }
 
@@ -94,24 +111,75 @@ const getDueDateInfo = (dueDate: string, dueTime: string | undefined, status: st
     return {
       label: `Overdue · ${formatted}${suffix}`,
       className: "bg-red-500 text-white",
+      isOverdue: true,
     };
   }
 
   if (diffDays === 0) {
-    return { label: `Due Today${suffix}`, className: "bg-orange-500 text-white" };
+    return {
+      label: `Due Today${suffix}`,
+      className: "bg-orange-500 text-white",
+      isOverdue: false,
+    };
   }
 
   if (diffDays <= 2) {
-    return { label: `Due ${formatted}${suffix}`, className: "bg-yellow-500 text-black" };
+    return {
+      label: `Due ${formatted}${suffix}`,
+      className: "bg-yellow-500 text-black",
+      isOverdue: false,
+    };
   }
 
   return {
     label: formatted + suffix,
     className: "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300",
+    isOverdue: false,
   };
 };
 
-/* ---------------- LIVE COUNTDOWN ---------------- */
+/* ---------------- TIME TRACKING HELPERS ---------------- */
+const formatDuration = (ms: number) => {
+  const safeMs = Math.max(0, ms);
+  const totalSeconds = Math.floor(safeMs / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+};
+
+// Computes the next activeSince / totalActiveMs / completedAt when a task's
+// status changes. Time only accrues while status === "In Progress"; pausing
+// banks the elapsed segment and stops the clock without adding to it.
+const computeTimeFields = (task: TaskType, newStatus: string) => {
+  const now = new Date();
+  let totalActiveMs = task.totalActiveMs || 0;
+  let activeSince = task.activeSince || null;
+
+  if (task.status === "In Progress" && activeSince) {
+    totalActiveMs += now.getTime() - new Date(activeSince).getTime();
+    activeSince = null;
+  }
+
+  if (newStatus === "In Progress") {
+    activeSince = now.toISOString();
+  }
+
+  const completedAt = newStatus === "Done" ? now.toISOString() : null;
+
+  if (newStatus === "Todo") {
+    totalActiveMs = 0;
+  }
+
+  return { totalActiveMs, activeSince, completedAt };
+};
+
+/* ---------------- LIVE COUNTDOWN (due date) ---------------- */
 function CountdownTimer({ target }: { target: Date }) {
   const [now, setNow] = useState(() => new Date());
 
@@ -122,13 +190,11 @@ function CountdownTimer({ target }: { target: Date }) {
 
   const diffMs = target.getTime() - now.getTime();
 
+  // Overdue state is already communicated by the due-date badge, so once the
+  // countdown itself has lapsed, render nothing rather than a second
+  // "Overdue" pill.
   if (diffMs <= 0) {
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-500 text-white text-xs font-mono">
-        <Timer size={11} />
-        Overdue
-      </span>
-    );
+    return null;
   }
 
   const totalSeconds = Math.floor(diffMs / 1000);
@@ -151,75 +217,29 @@ function CountdownTimer({ target }: { target: Date }) {
   );
 }
 
-/* ---------------- CUSTOM FILTER DROPDOWN ---------------- */
-const FILTER_OPTIONS = ["All", "Todo", "In Progress", "Done"];
-
-function FilterDropdown({
-  value,
-  onChange,
+/* ---------------- LIVE ELAPSED TIMER (In Progress) ---------------- */
+function ElapsedTimer({
+  activeSince,
+  totalActiveMs,
 }: {
-  value: string;
-  onChange: (value: string) => void;
+  activeSince: string | null | undefined;
+  totalActiveMs: number;
 }) {
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    const interval = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(interval);
   }, []);
 
-  return (
-    <div ref={containerRef} className="relative shrink-0">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="flex items-center justify-between gap-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white pl-3 pr-2.5 py-2 rounded-lg font-sans text-sm shadow-sm hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-colors cursor-pointer w-[6.5rem] sm:w-32"
-      >
-        <span className="truncate">{value}</span>
-        <ChevronDown
-          size={14}
-          className={`shrink-0 text-gray-400 dark:text-gray-500 transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
-        />
-      </button>
+  const liveMs = activeSince ? now.getTime() - new Date(activeSince).getTime() : 0;
+  const elapsed = totalActiveMs + liveMs;
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.12 }}
-            className="absolute right-0 z-50 mt-1 w-40 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg"
-          >
-            {FILTER_OPTIONS.map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => {
-                  onChange(opt);
-                  setOpen(false);
-                }}
-                className={`block w-full px-3 py-2 text-left text-sm font-sans transition-colors ${
-                  opt === value
-                    ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium"
-                    : "text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-                }`}
-              >
-                {opt}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-mono">
+      <Clock size={11} />
+      {formatDuration(elapsed)}
+    </span>
   );
 }
 
@@ -235,6 +255,8 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
   const [editDueTime, setEditDueTime] = useState("");
   const [editSubtasks, setEditSubtasks] = useState<Subtask[]>([]);
   const [editSubtaskInput, setEditSubtaskInput] = useState("");
+
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
 
   const filteredTasks = useMemo(() => {
     return taskList.filter((t) => {
@@ -273,6 +295,8 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
   };
 
   const updateStatus = async (task: TaskType, status: string) => {
+    const timeFields = computeTimeFields(task, status);
+
     const res = await fetch(`/api/tasks/${task._id}`, {
       method: "PUT",
       headers: {
@@ -281,6 +305,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
       body: JSON.stringify({
         ...task,
         status,
+        ...timeFields,
       }),
     });
 
@@ -290,8 +315,6 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
       setTaskList((prev) =>
         prev.map((t) => (t._id === task._id ? data.data : t))
       );
-
-      alert(`Status updated to ${status}`);
     } else {
       alert("Failed to update task");
     }
@@ -368,22 +391,31 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
       cancelEdit();
     } else {
       alert("Failed to update task");
-    } 
+    }
   };
 
   return (
     <div>
       <StatsCards tasks={taskList} />
 
-      <div className="flex flex-row gap-2 sm:gap-3 mb-6">
+      <div className="flex gap-3 mb-6">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search tasks..."
-          className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 p-2 rounded-lg w-full font-sans min-w-0"
+          className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 p-2 rounded w-full font-sans"
         />
 
-        <FilterDropdown value={filter} onChange={setFilter} />
+        <select
+          className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-2 rounded font-sans"
+          onChange={(e) => setFilter(e.target.value)}
+        >
+          <option className="dark:bg-gray-800">All</option>
+          <option className="dark:bg-gray-800">Todo</option>
+          <option className="dark:bg-gray-800">In Progress</option>
+          <option className="dark:bg-gray-800">Paused</option>
+          <option className="dark:bg-gray-800">Done</option>
+        </select>
       </div>
 
       <div className="grid gap-4">
@@ -392,6 +424,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
             const dueDateInfo = getDueDateInfo(task.dueDate, task.dueTime, task.status);
             const countdownTarget = parseDueDateTime(task.dueDate, task.dueTime);
             const isEditing = editingId === task._id;
+            const menuOpen = menuOpenId === task._id;
             const titleColorClass =
               task.status === "Done"
                 ? "line-through text-gray-400 dark:text-gray-500"
@@ -405,7 +438,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.97 }}
                 transition={{ duration: 0.2 }}
-                className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 sm:p-4 rounded-xl shadow-sm transition-colors duration-300 overflow-hidden ${
+                className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl shadow-sm transition-colors duration-300 ${
                   task.status === "Done"
                     ? "border-green-500 dark:border-green-500 bg-green-50 dark:bg-green-900/20"
                     : ""
@@ -438,7 +471,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="text-xs font-medium text-gray-500 dark:text-gray-400 font-sans">
                           Due Date
@@ -475,7 +508,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                             <input
                               value={sub.title}
                               onChange={(e) => updateEditSubtaskTitle(idx, e.target.value)}
-                              className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-1.5 rounded text-sm font-sans min-w-0"
+                              className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-1.5 rounded text-sm font-sans"
                             />
                             <button
                               type="button"
@@ -498,7 +531,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                               }
                             }}
                             placeholder="Add subtask"
-                            className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-1.5 rounded text-sm font-sans min-w-0"
+                            className="flex-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-1.5 rounded text-sm font-sans"
                           />
                           <button
                             type="button"
@@ -510,80 +543,8 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                         </div>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h2
-                        className={`text-lg font-semibold font-heading tracking-tight transition-colors break-words ${titleColorClass}`}
-                      >
-                        {task.title}
-                      </h2>
 
-                      <AnimatePresence>
-                        {task.status === "Done" && (
-                          <motion.span
-                            initial={{ scale: 0, rotate: -45, opacity: 0 }}
-                            animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                            exit={{ scale: 0, opacity: 0 }}
-                            transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                            className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white shrink-0"
-                          >
-                            <Check size={12} />
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    <p className="text-sm text-gray-600 dark:text-gray-300 font-sans break-words">
-                      {task.description}
-                    </p>
-
-                    {task.subtasks && task.subtasks.length > 0 && (
-                      <ul className="mt-2 list-disc space-y-1 pl-5">
-                        {task.subtasks.map((sub, idx) => (
-                          <li
-                            key={idx}
-                            className={`text-sm font-sans break-words ${
-                              sub.completed
-                                ? "text-gray-400 dark:text-gray-500 line-through"
-                                : "text-gray-600 dark:text-gray-300"
-                            }`}
-                          >
-                            {sub.title}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </>
-                )}
-
-                <div className="flex gap-2 mt-2 text-xs flex-wrap">
-                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded font-sans">
-                    {task.priority}
-                  </span>
-
-                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded font-sans">
-                    {task.status}
-                  </span>
-
-                  {dueDateInfo && (
-                    <span
-                      className={`px-2 py-1 rounded flex items-center gap-1 font-mono ${dueDateInfo.className}`}
-                    >
-                      <Calendar size={11} />
-                      {dueDateInfo.label}
-                    </span>
-                  )}
-
-                  {countdownTarget && task.status !== "Done" && (
-                    <CountdownTimer target={countdownTarget} />
-                  )}
-                </div>
-
-                <div className="flex gap-2 mt-4 flex-wrap">
-                  {isEditing ? (
-                    <>
+                    <div className="flex gap-2 pt-1">
                       <button
                         onClick={() => saveEdit(task)}
                         className="px-3 py-1 text-xs bg-green-500 text-white rounded flex items-center gap-1 font-sans"
@@ -598,34 +559,151 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
                         <X size={12} />
                         Cancel
                       </button>
-                    </>
-                  ) : (
-                    <>
-                      {["Todo", "In Progress", "Done"].map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => updateStatus(task, s)}
-                          className="px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700 font-sans"
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 flex-1 items-center gap-2">
+                        <h2
+                          className={`text-lg font-semibold font-heading tracking-tight transition-colors truncate ${titleColorClass}`}
                         >
-                          {s}
+                          {task.title}
+                        </h2>
+
+                        <AnimatePresence>
+                          {task.status === "Done" && (
+                            <motion.span
+                              initial={{ scale: 0, rotate: -45, opacity: 0 }}
+                              animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                              exit={{ scale: 0, opacity: 0 }}
+                              transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                              className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500 text-white"
+                            >
+                              <Check size={12} />
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      {/* RIGHT-SIDE ACTIONS: status dropdown + edit + delete */}
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <div className="relative">
+                          <button
+                            onClick={() => setMenuOpenId(menuOpen ? null : task._id)}
+                            className="flex items-center gap-1 rounded-full border border-gray-200 dark:border-gray-600 px-2.5 py-1 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 font-sans"
+                          >
+                            {task.status}
+                            <ChevronDown size={12} />
+                          </button>
+
+                          {menuOpen && (
+                            <>
+                              <div
+                                className="fixed inset-0 z-10"
+                                onClick={() => setMenuOpenId(null)}
+                              />
+                              <div className="absolute right-0 z-20 mt-1 w-36 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-1 shadow-lg">
+                                {statusOptions.map((s) => (
+                                  <button
+                                    key={s}
+                                    onClick={() => {
+                                      updateStatus(task, s);
+                                      setMenuOpenId(null);
+                                    }}
+                                    className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-sans transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                                      task.status === s
+                                        ? "font-semibold text-gray-900 dark:text-white"
+                                        : "text-gray-600 dark:text-gray-300"
+                                    }`}
+                                  >
+                                    {s}
+                                    {task.status === s && <Check size={13} />}
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        <button
+                          onClick={() => startEdit(task)}
+                          className="rounded-full p-1.5 text-gray-500 dark:text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                          aria-label="Edit task"
+                        >
+                          <Pencil size={14} />
                         </button>
-                      ))}
 
-                      <button
-                        onClick={() => startEdit(task)}
-                        className="px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-1 font-sans"
-                      >
-                        <Pencil size={12} />
-                        Edit
-                      </button>
+                        <button
+                          onClick={() => deleteTask(task._id)}
+                          className="rounded-full p-1.5 text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/30"
+                          aria-label="Delete task"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
 
-                      <button
-                        onClick={() => deleteTask(task._id)}
-                        className="px-3 py-1 text-xs bg-red-500 text-white rounded font-sans"
-                      >
-                        Delete
-                      </button>
-                    </>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300 font-sans">
+                      {task.description}
+                    </p>
+
+                    {task.subtasks && task.subtasks.length > 0 && (
+                      <ul className="mt-2 list-disc space-y-1 pl-5">
+                        {task.subtasks.map((sub, idx) => (
+                          <li
+                            key={idx}
+                            className={`text-sm font-sans ${
+                              sub.completed
+                                ? "text-gray-400 dark:text-gray-500 line-through"
+                                : "text-gray-600 dark:text-gray-300"
+                            }`}
+                          >
+                            {sub.title}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
+                )}
+
+                <div className="flex gap-2 mt-3 text-xs flex-wrap">
+                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded font-sans">
+                    {task.priority}
+                  </span>
+
+                  {dueDateInfo && (
+                    <span
+                      className={`px-2 py-1 rounded flex items-center gap-1 font-mono ${dueDateInfo.className}`}
+                    >
+                      <Calendar size={11} />
+                      {dueDateInfo.label}
+                    </span>
+                  )}
+
+                  {countdownTarget && task.status !== "Done" && !dueDateInfo?.isOverdue && (
+                    <CountdownTimer target={countdownTarget} />
+                  )}
+
+                  {task.status === "In Progress" && (
+                    <ElapsedTimer
+                      activeSince={task.activeSince}
+                      totalActiveMs={task.totalActiveMs || 0}
+                    />
+                  )}
+
+                  {task.status === "Paused" && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 text-xs font-mono">
+                      <Pause size={11} />
+                      Paused · {formatDuration(task.totalActiveMs || 0)}
+                    </span>
+                  )}
+
+                  {task.status === "Done" && (task.totalActiveMs || 0) > 0 && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs font-mono">
+                      <Check size={11} />
+                      {formatDuration(task.totalActiveMs || 0)}
+                    </span>
                   )}
                 </div>
               </motion.div>
