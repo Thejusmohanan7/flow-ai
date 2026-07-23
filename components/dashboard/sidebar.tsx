@@ -22,7 +22,7 @@ export default function Sidebar() {
   const menuItems = [
     { name: "Dashboard", href: "/home", icon: LayoutDashboard },
     { name: "Tasks", href: "/dashboard", icon: CheckSquare },
-    { name: "Workspace", href: "/workspace", icon: FolderKanban },
+    { name: "Habits", href: "/habits", icon: FolderKanban },
     { name: "Notes", href: "/notes", icon: FileText },
   ];
 
