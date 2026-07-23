@@ -128,5 +128,6 @@
     @apply font-sans;
     overflow-y: scroll;
     scrollbar-gutter: stable;
+    scroll-behavior: smooth;
   }
 }

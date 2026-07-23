@@ -72,7 +72,7 @@ const Faq: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="py-16 bg-slate-50 dark:bg-slate-950">
+    <section id="faq" className="py-16 bg-slate-50 dark:bg-slate-950">
       <div className="max-w-4xl mx-auto px-6">
 
         {/* Header */}
@@ -187,6 +187,10 @@ const Faq: React.FC = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() =>
+              (window.location.href =
+                "mailto:thejusmohanan0@gmail.com?subject=FlowAI Support Request")
+              }
               className="mt-8 rounded-full bg-slate-900 dark:bg-white px-8 py-3 font-medium text-white dark:text-slate-900 transition hover:bg-slate-800 dark:hover:bg-slate-200"
             >
               Contact Support

@@ -24,22 +24,16 @@ const Footer: React.FC = () => {
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
+             
               <a
-                href="#"
-                className="rounded-full border border-slate-800 px-4 py-2 transition hover:border-slate-600 hover:text-white"
-              >
-                X
-              </a>
-
-              <a
-                href="#"
+                href="https://github.com/Thejusmohanan7"
                 className="rounded-full border border-slate-800 px-4 py-2 transition hover:border-slate-600 hover:text-white"
               >
                 GitHub
               </a>
 
               <a
-                href="#"
+                href="https://www.linkedin.com/in/thejus-mohanan-a09282217/"
                 className="rounded-full border border-slate-800 px-4 py-2 transition hover:border-slate-600 hover:text-white"
               >
                 LinkedIn
@@ -55,25 +49,18 @@ const Footer: React.FC = () => {
 
             <ul className="mt-5 space-y-3">
               <li>
-                <a href="#" className="transition hover:text-white">
+                <a href="#features" className="transition hover:text-white">
                   Features
                 </a>
               </li>
 
               <li>
-                <a href="#" className="transition hover:text-white">
+                <a href="/login" className="transition hover:text-white">
                   Dashboard
                 </a>
               </li>
-
               <li>
-                <a href="#" className="transition hover:text-white">
-                  AI Assistant
-                </a>
-              </li>
-
-              <li>
-                <a href="#" className="transition hover:text-white">
+                <a href="#works" className="transition hover:text-white">
                   Analytics
                 </a>
               </li>
@@ -146,36 +133,6 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-        </div>
-
-        {/* Newsletter */}
-        <div className="mt-16 rounded-3xl border border-slate-800 bg-slate-900 p-8">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-
-            <div>
-              <h3 className="text-2xl font-bold text-white">
-                Stay Updated
-              </h3>
-
-              <p className="mt-2 text-slate-400">
-                Get product updates, productivity tips, and AI insights
-                directly in your inbox.
-              </p>
-            </div>
-
-            <div className="flex w-full max-w-md flex-col gap-3 sm:flex-row">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 rounded-full border border-slate-700 bg-slate-950 px-5 py-3 text-white outline-none focus:border-blue-500"
-              />
-
-              <button className="rounded-full bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-700">
-                Subscribe
-              </button>
-            </div>
-
-          </div>
         </div>
 
         {/* Bottom Bar */}

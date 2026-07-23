@@ -34,11 +34,7 @@ const Navbar = () => {
     },
     {
       label: "Workflow",
-      href: "#workflow",
-    },
-    {
-      label: "Testimonials",
-      href: "#testimonials",
+      href: "#works",
     },
     {
       label: "FAQ",

@@ -51,13 +51,13 @@ const features = [
 
 const Features: React.FC = () => {
   return (
-    <section className="py-16 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+    <section id="features" className="py-16 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <div className="max-w-7xl mx-auto px-6">
 
         {/* Heading */}
         <div className="text-center max-w-3xl mx-auto">
           <span className="inline-flex items-center rounded-full border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-medium bg-white dark:bg-slate-900">
-            ✨ Powerful Features
+             Powerful Features
           </span>
 
           <h2 className="mt-6 text-4xl md:text-5xl font-bold text-slate-900 dark:text-white">

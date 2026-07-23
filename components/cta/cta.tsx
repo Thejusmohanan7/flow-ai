@@ -1,5 +1,5 @@
 import React from "react";
-
+import Link from "next/link";
 const Cta: React.FC = () => {
   return (
     <section className="relative overflow-hidden py-16">
@@ -35,13 +35,13 @@ const Cta: React.FC = () => {
 
         {/* CTA Buttons */}
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button className="rounded-full bg-white px-8 py-4 font-semibold text-slate-900 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-            Get Started Free
-          </button>
 
-          <button className="rounded-full border border-white/20 bg-white/10 px-8 py-4 font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/20">
-            Book a Demo
-          </button>
+          <Link href="/login">
+            <button className="rounded-full bg-white px-8 py-4 font-semibold text-slate-900 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+              Get Started Free
+            </button>
+          </Link>
+
         </div>
 
         {/* Trust Indicators */}

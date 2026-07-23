@@ -1,5 +1,5 @@
 import React from "react";
-
+import Link from "next/link";
 const steps = [
   {
     number: "01",
@@ -41,7 +41,7 @@ const steps = [
 
 const Works: React.FC = () => {
   return (
-    <section className="py-16 bg-slate-50 dark:bg-slate-950 overflow-hidden">
+    <section id="works" className="py-16 bg-slate-50 dark:bg-slate-950 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
 
         {/* Header */}
@@ -116,10 +116,11 @@ const Works: React.FC = () => {
                 to help you stay productive every day.
               </p>
             </div>
-
-            <button className="rounded-full bg-slate-900 dark:bg-white px-8 py-3 font-medium text-white dark:text-slate-900 transition hover:bg-slate-800 dark:hover:bg-slate-200">
-              Start Your Journey
-            </button>
+             <Link href="/login">
+                <button className="rounded-full bg-slate-900 dark:bg-white px-8 py-3 font-medium text-white dark:text-slate-900 transition hover:bg-slate-800 dark:hover:bg-slate-200">
+                  Start Your Journey
+                </button>
+             </Link>
           </div>
         </div>
 

@@ -6,6 +6,7 @@ import {
   CheckCircle,
   ChevronDown,
 } from "lucide-react";
+import Link from "next/link";
 
 const Hero: React.FC = () => {
   return (
@@ -40,15 +41,17 @@ const Hero: React.FC = () => {
 
             {/* CTA */}
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <button className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-3 font-semibold text-white hover:bg-blue-700 transition">
-                Get Started Free
-                <ArrowRight size={18} />
-              </button>
+              <Link href="/login">
+                <button className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-3 font-semibold text-white hover:bg-blue-700 transition">
+                  Get Started Free
+                  <ArrowRight size={18} />
+                </button>
+              </Link>
 
-              <button className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 dark:border-slate-700 px-7 py-3 font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              {/* <button className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 dark:border-slate-700 px-7 py-3 font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                 <PlayCircle size={18} />
                 Watch Demo
-              </button>
+              </button> */}
             </div>
 
             {/* Trust Text */}
