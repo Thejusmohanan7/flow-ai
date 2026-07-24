@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   Check,
+  ChevronDown,
   Flame,
   Trophy,
   Trash2,
@@ -229,6 +231,77 @@ function WeeklySummary({ habits }: { habits: HabitType[] }) {
   );
 }
 
+/* ---------------- CATEGORY FILTER DROPDOWN ---------------- */
+function CategorySelect({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  options: string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 transition font-sans min-w-[140px] justify-between"
+      >
+        {value}
+        <ChevronDown
+          size={15}
+          className={`text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-30 mt-2 w-full min-w-[140px] overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg py-1"
+          >
+            {options.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => {
+                  onChange(opt);
+                  setOpen(false);
+                }}
+                className={`flex w-full items-center justify-between px-4 py-2 text-sm text-left font-sans transition-colors ${
+                  value === opt
+                    ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/60"
+                }`}
+              >
+                {opt}
+                {value === opt && <Check size={14} />}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 /* ---------------- MAIN COMPONENT ---------------- */
 export default function Habits({ habits }: { habits: HabitType[] }) {
   const [habitList, setHabitList] = useState<HabitType[]>(habits);
@@ -266,43 +339,70 @@ export default function Habits({ habits }: { habits: HabitType[] }) {
         : [...habit.completions, { date, note }];
     }
 
-    const res = await fetch(`/api/habits/${habit._id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...habit, completions: newCompletions }),
-    });
+    try {
+      const res = await fetch(`/api/habits/${habit._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...habit, completions: newCompletions }),
+      });
 
-    if (res.ok) {
-      const data = await res.json();
-      setHabitList((prev) => prev.map((h) => (h._id === habit._id ? data.data : h)));
-    } else {
-      alert("Failed to update habit");
+      if (res.ok) {
+        const data = await res.json();
+        setHabitList((prev) => prev.map((h) => (h._id === habit._id ? data.data : h)));
+        toast.success(
+          habit.targetCount
+            ? "Progress updated"
+            : doneNow
+            ? "Marked as not done"
+            : "Marked as done"
+        );
+      } else {
+        const err = await res.json().catch(() => null);
+        toast.error(err?.message || "Failed to update habit");
+      }
+    } catch (error) {
+      console.error("Toggle habit error:", error);
+      toast.error("Something went wrong. Please try again.");
     }
   };
 
   const toggleArchive = async (habit: HabitType) => {
-    const res = await fetch(`/api/habits/${habit._id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...habit, archived: !habit.archived }),
-    });
+    try {
+      const res = await fetch(`/api/habits/${habit._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...habit, archived: !habit.archived }),
+      });
 
-    if (res.ok) {
-      const data = await res.json();
-      setHabitList((prev) => prev.map((h) => (h._id === habit._id ? data.data : h)));
-    } else {
-      alert("Failed to update habit");
+      if (res.ok) {
+        const data = await res.json();
+        setHabitList((prev) => prev.map((h) => (h._id === habit._id ? data.data : h)));
+        toast.success(habit.archived ? "Habit unarchived" : "Habit archived");
+      } else {
+        const err = await res.json().catch(() => null);
+        toast.error(err?.message || "Failed to update habit");
+      }
+    } catch (error) {
+      console.error("Toggle archive error:", error);
+      toast.error("Something went wrong. Please try again.");
     }
   };
 
   const deleteHabit = async (id: string) => {
     if (!confirm("Delete this habit? This removes its full history.")) return;
 
-    const res = await fetch(`/api/habits/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      setHabitList((prev) => prev.filter((h) => h._id !== id));
-    } else {
-      alert("Failed to delete habit");
+    try {
+      const res = await fetch(`/api/habits/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setHabitList((prev) => prev.filter((h) => h._id !== id));
+        toast.success("Habit deleted");
+      } else {
+        const err = await res.json().catch(() => null);
+        toast.error(err?.message || "Failed to delete habit");
+      }
+    } catch (error) {
+      console.error("Delete habit error:", error);
+      toast.error("Something went wrong. Please try again.");
     }
   };
 
@@ -318,17 +418,11 @@ export default function Habits({ habits }: { habits: HabitType[] }) {
 
       <div className="flex gap-3 mb-6 flex-wrap items-center justify-between">
         <div className="flex gap-3 flex-wrap items-center">
-          <select
+          <CategorySelect
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-2 rounded font-sans"
-          >
-            {categories.map((c) => (
-              <option key={c} className="dark:bg-gray-800">
-                {c}
-              </option>
-            ))}
-          </select>
+            onChange={setCategoryFilter}
+            options={categories}
+          />
 
           <button
             onClick={() => setShowArchived((s) => !s)}

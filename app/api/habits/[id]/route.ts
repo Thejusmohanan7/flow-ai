@@ -11,7 +11,7 @@ const connectDB = async () => {
   }
 };
 
-type Params = { params: { id: string } };
+type Params = { params: Promise<{ id: string }> };
 
 export async function GET(req: Request, { params }: Params) {
   try {
@@ -25,7 +25,9 @@ export async function GET(req: Request, { params }: Params) {
       );
     }
 
-    const habit = await Habit.findOne({ _id: params.id, userId });
+    const { id } = await params;
+
+    const habit = await Habit.findOne({ _id: id, userId });
 
     if (!habit) {
       return NextResponse.json(
@@ -56,11 +58,12 @@ export async function PUT(req: Request, { params }: Params) {
       );
     }
 
+    const { id } = await params;
     const body = await req.json();
     const { _id, userId: bodyUserId, ...updateData } = body;
 
     const habit = await Habit.findOneAndUpdate(
-      { _id: params.id, userId },
+      { _id: id, userId },
       updateData,
       { new: true, runValidators: true }
     );
@@ -94,7 +97,9 @@ export async function DELETE(req: Request, { params }: Params) {
       );
     }
 
-    const habit = await Habit.findOneAndDelete({ _id: params.id, userId });
+    const { id } = await params;
+
+    const habit = await Habit.findOneAndDelete({ _id: id, userId });
 
     if (!habit) {
       return NextResponse.json(
