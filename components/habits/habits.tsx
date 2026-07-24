@@ -49,6 +49,17 @@ const toDateStr = (d: Date) => {
 
 const todayStr = () => toDateStr(new Date());
 
+const formatReminderTime = (value?: string) => {
+  if (!value) return null;
+  const [hStr, mStr] = value.split(":");
+  let h = parseInt(hStr, 10);
+  if (isNaN(h)) return value;
+  const period = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h.toString().padStart(2, "0")}:${mStr} ${period}`;
+};
+
 const lastNDays = (n: number) => {
   const days: string[] = [];
   const now = new Date();
@@ -413,7 +424,7 @@ export default function Habits({ habits }: { habits: HabitType[] }) {
                       {habit.reminderTime && (
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-mono">
                           <Bell size={11} />
-                          {habit.reminderTime}
+                          {formatReminderTime(habit.reminderTime)}
                         </span>
                       )}
                     </div>

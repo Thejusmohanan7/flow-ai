@@ -5,6 +5,7 @@ import Habit from "@/models/Habit";
 import Habits from "@/components/habits/habits";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const connectDB = async () => {
   if (mongoose.connection.readyState === 0) {
@@ -16,7 +17,7 @@ export default async function HabitsPage() {
   const { userId } = await auth();
 
   if (!userId) {
-    redirect("/sign-in");
+    redirect("/login");
   }
 
   await connectDB();
