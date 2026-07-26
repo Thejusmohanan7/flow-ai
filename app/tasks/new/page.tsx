@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 import {
   Popover,
@@ -93,7 +94,7 @@ export default function CreateTaskPage() {
   /* ---------------- AI SUGGEST ---------------- */
   const handleAiSuggest = async () => {
     if (!title.trim()) {
-      alert("Enter a task title first so AI has something to work with");
+      toast.error("Enter a task title first so AI has something to work with");
       return;
     }
 
@@ -109,7 +110,7 @@ export default function CreateTaskPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "AI suggestion failed");
+        toast.error(data.message || "AI suggestion failed");
         return;
       }
 
@@ -136,7 +137,7 @@ export default function CreateTaskPage() {
         setPriority(data.priority);
       }
     } catch (error) {
-      alert("Something went wrong getting AI suggestions");
+toast.error("Something went wrong getting AI suggestions");
     } finally {
       setAiLoading(false);
     }
@@ -172,7 +173,7 @@ export default function CreateTaskPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Failed to create task");
+toast.error(data.message || "Failed to create task");
         return;
       }
 
@@ -183,7 +184,7 @@ export default function CreateTaskPage() {
 
       router.push("/dashboard");
     } catch (error) {
-      alert("Something went wrong");
+toast.error("Something went wrong");
     } finally {
       setLoading(false);
     }

@@ -368,7 +368,7 @@ export default function NewHabitPage() {
           <button
             onClick={submit}
             disabled={saving}
-            className="px-4 py-2 text-sm bg-green-500 text-white rounded-full flex items-center gap-1 font-sans disabled:opacity-60"
+            className="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full flex items-center gap-1 font-sans disabled:opacity-60"
           >
             <Check size={14} />
             {saving ? "Saving..." : "Save habit"}

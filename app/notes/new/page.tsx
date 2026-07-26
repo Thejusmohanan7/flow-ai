@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Pin, ArrowLeft } from "lucide-react";
+import {toast} from "sonner";
 
 const colorOrder = ["yellow", "blue", "green", "purple", "orange", "gray"];
 
@@ -50,7 +51,7 @@ export default function NewNotePage() {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      alert("Title cannot be empty");
+      toast.error("Title cannot be empty");
       return;
     }
 
@@ -71,13 +72,13 @@ export default function NewNotePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Failed to save note");
+        toast.error(data.message || "Failed to save note");
         return;
       }
 
       router.push("/notes");
     } catch (error) {
-      alert("Something went wrong");
+      toast.error("Something went wrong");
     } finally {
       setSaving(false);
     }
@@ -172,7 +173,7 @@ export default function NewNotePage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* EDITOR */}
         <div className="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-700 space-y-4">
-          <h2 className="text-xl font-semibold font-heading bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+          <h2 className="text-xl font-semibold font-heading bg-gradient-to-r from-blue-600 to-indigo-600 to-pink-500 bg-clip-text text-transparent">
             Create Note
           </h2>
 
@@ -355,7 +356,7 @@ export default function NewNotePage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md hover:scale-105 transition disabled:opacity-60 disabled:hover:scale-100"
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md hover:scale-105 transition disabled:opacity-60 disabled:hover:scale-100"
           >
             {saving ? "Saving..." : "Save Note"}
           </button>
