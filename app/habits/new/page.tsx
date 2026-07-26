@@ -124,7 +124,6 @@ function TimePicker({
   const minutes = ["00", "15", "30", "45"];
 
   const { h, m, period } = to12Hour(value);
-
   const displayLabel = value ? `${h}:${m} ${period}` : "Select time";
 
   const update = (newH: string, newM: string, newPeriod: "AM" | "PM") => {
@@ -206,6 +205,13 @@ export default function NewHabitPage() {
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("Personal");
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  });
   const [frequency, setFrequency] = useState<"daily" | "weekdays" | "custom">(
     "daily"
   );
@@ -226,11 +232,11 @@ export default function NewHabitPage() {
       const res = await fetch(`/api/habits`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        cache: "no-store",
         body: JSON.stringify({
           name: name.trim(),
           category,
           frequency,
+          startDate,
           targetPerWeek: frequency === "custom" ? targetPerWeek : undefined,
           targetCount: useTargetCount ? targetCount : undefined,
           reminderTime: reminderTime || undefined,
@@ -245,37 +251,28 @@ export default function NewHabitPage() {
         const err = await res.json().catch(() => null);
         toast.error(err?.message || "Failed to create habit");
       }
-    } catch (err) {
-      console.error("Create habit error:", err);
-      toast.error("Something went wrong. Please try again.");
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      {/* HEADER */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-          New Habit
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Build consistency with small actions
-        </p>
-      </div>
+    <div className="max-w-xl mx-auto p-6">
+      <h1 className="text-2xl font-semibold font-heading text-gray-900 dark:text-white mb-6">
+        New habit
+      </h1>
 
-      {/* CARD */}
-      <div className="rounded-2xl border border-gray-200/70 dark:border-white/10 bg-white/80 dark:bg-white/[0.04] backdrop-blur shadow-sm p-5 sm:p-6 space-y-5">
-        {/* NAME */}
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 space-y-4">
         <div>
-          <label className="text-xs text-gray-500 dark:text-gray-400">
-            Habit Name
+          <label className="text-xs font-medium text-gray-500 dark:text-gray-400 font-sans">
+            Name
           </label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.05] px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100"
+            placeholder="e.g. Drink water, Read, Exercise"
+            className="mt-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-sm font-sans"
+            autoFocus
           />
         </div>
 
@@ -296,21 +293,34 @@ export default function NewHabitPage() {
 
           <div>
             <label className="text-xs text-gray-500 dark:text-gray-400">
-              Frequency
+              Start date
             </label>
-            <div className="mt-1">
-              <Select
-                value={frequency}
-                onChange={(v) => setFrequency(v as any)}
-                options={frequencies}
-              />
-            </div>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.05] px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100"
+            />
+          </div>
+        </div>
+
+        {/* FREQUENCY */}
+        <div>
+          <label className="text-xs text-gray-500 dark:text-gray-400">
+            Frequency
+          </label>
+          <div className="mt-1">
+            <Select
+              value={frequency}
+              onChange={(v) => setFrequency(v as any)}
+              options={frequencies}
+            />
           </div>
         </div>
 
         {frequency === "custom" && (
           <div>
-            <label className="text-xs text-gray-500 dark:text-gray-400">
+            <label className="text-xs font-medium text-gray-500 dark:text-gray-400 font-sans">
               Times per week
             </label>
             <input
@@ -319,59 +329,53 @@ export default function NewHabitPage() {
               max={7}
               value={targetPerWeek}
               onChange={(e) => setTargetPerWeek(Number(e.target.value))}
-              className="mt-1 w-full rounded-xl border border-gray-200 dark:border-white/10 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-white/[0.05]"
+              className="mt-1 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-sm font-mono"
             />
           </div>
         )}
 
-        {/* GRID */}
-        <div className="grid sm:grid-cols-2 gap-4 items-start">
+        <div className="grid grid-cols-2 gap-3 items-end">
           <div>
-            <label className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <label className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 font-sans">
               <input
                 type="checkbox"
                 checked={useTargetCount}
                 onChange={(e) => setUseTargetCount(e.target.checked)}
-                className="accent-indigo-500"
               />
-              Track count
+              Track a daily count (e.g. glasses of water)
             </label>
-
             {useTargetCount && (
               <input
                 type="number"
                 min={1}
                 value={targetCount}
                 onChange={(e) => setTargetCount(Number(e.target.value))}
-                className="mt-2 w-full rounded-xl border border-gray-200 dark:border-white/10 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-white/[0.05]"
+                className="mt-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-2 rounded w-full text-sm font-mono"
+                placeholder="Target count"
               />
             )}
           </div>
 
           <div>
-            <label className="text-xs text-gray-500 dark:text-gray-400">
-              Reminder
+            <label className="text-xs font-medium text-gray-500 dark:text-gray-400 font-sans">
+              Reminder time (optional)
             </label>
-            <div className="mt-1">
-              <TimePicker value={reminderTime} onChange={setReminderTime} />
-            </div>
+            <TimePicker value={reminderTime} onChange={setReminderTime} />
           </div>
         </div>
 
-        {/* ACTIONS */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-3">
+        <div className="flex gap-2 pt-2">
           <button
             onClick={submit}
             disabled={saving}
-            className="w-full sm:w-auto px-5 py-2.5 text-sm rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white flex items-center justify-center gap-2 disabled:opacity-60"
+            className="px-4 py-2 text-sm bg-green-500 text-white rounded-full flex items-center gap-1 font-sans disabled:opacity-60"
           >
             <Check size={14} />
-            {saving ? "Saving..." : "Save Habit"}
+            {saving ? "Saving..." : "Save habit"}
           </button>
-
           <button
             onClick={() => router.push("/habits")}
-            className="w-full sm:w-auto px-5 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 flex items-center justify-center gap-2"
+            className="px-4 py-2 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-1 font-sans"
           >
             <X size={14} />
             Cancel

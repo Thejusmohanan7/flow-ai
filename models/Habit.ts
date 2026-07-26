@@ -9,6 +9,14 @@ const CompletionSchema = new Schema(
   { _id: false }
 );
 
+const todayStr = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
 const HabitSchema = new Schema(
   {
     userId: { type: String, required: true },
@@ -23,6 +31,7 @@ const HabitSchema = new Schema(
     targetPerWeek: { type: Number }, // used when frequency === "custom"
     targetCount: { type: Number }, // e.g. drink water 8x/day
     reminderTime: { type: String }, // "HH:mm"
+    startDate: { type: String, default: todayStr }, // "YYYY-MM-DD" — when tracking begins
     completions: { type: [CompletionSchema], default: [] },
     archived: { type: Boolean, default: false },
   },

@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
   Check,
-  ChevronDown,
   Flame,
   Trophy,
   Trash2,
@@ -33,6 +32,7 @@ type HabitType = {
   targetPerWeek?: number; // used when frequency === "custom"
   targetCount?: number; // e.g. drink water 8x/day
   reminderTime?: string;
+  startDate?: string; // "YYYY-MM-DD" — when tracking begins
   completions: Completion[];
   archived?: boolean;
   createdAt: string;
@@ -50,6 +50,13 @@ const toDateStr = (d: Date) => {
 };
 
 const todayStr = () => toDateStr(new Date());
+
+const formatDateLabel = (dateStr: string) => {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  if (!y || !m || !d) return dateStr;
+  const date = new Date(y, m - 1, d);
+  return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+};
 
 const formatReminderTime = (value?: string) => {
   if (!value) return null;
@@ -74,6 +81,7 @@ const lastNDays = (n: number) => {
 };
 
 const isScheduledOn = (habit: HabitType, dateStr: string) => {
+  if (habit.startDate && dateStr < habit.startDate) return false;
   if (habit.frequency === "daily") return true;
   if (habit.frequency === "weekdays") {
     const day = new Date(dateStr).getDay();
@@ -231,77 +239,6 @@ function WeeklySummary({ habits }: { habits: HabitType[] }) {
   );
 }
 
-/* ---------------- CATEGORY FILTER DROPDOWN ---------------- */
-function CategorySelect({
-  value,
-  onChange,
-  options,
-}: {
-  value: string;
-  onChange: (val: string) => void;
-  options: string[];
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 transition font-sans min-w-[140px] justify-between"
-      >
-        {value}
-        <ChevronDown
-          size={15}
-          className={`text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -4, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.98 }}
-            transition={{ duration: 0.15 }}
-            className="absolute z-30 mt-2 w-full min-w-[140px] overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg py-1"
-          >
-            {options.map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => {
-                  onChange(opt);
-                  setOpen(false);
-                }}
-                className={`flex w-full items-center justify-between px-4 py-2 text-sm text-left font-sans transition-colors ${
-                  value === opt
-                    ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/60"
-                }`}
-              >
-                {opt}
-                {value === opt && <Check size={14} />}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
 /* ---------------- MAIN COMPONENT ---------------- */
 export default function Habits({ habits }: { habits: HabitType[] }) {
   const [habitList, setHabitList] = useState<HabitType[]>(habits);
@@ -418,11 +355,17 @@ export default function Habits({ habits }: { habits: HabitType[] }) {
 
       <div className="flex gap-3 mb-6 flex-wrap items-center justify-between">
         <div className="flex gap-3 flex-wrap items-center">
-          <CategorySelect
+          <select
             value={categoryFilter}
-            onChange={setCategoryFilter}
-            options={categories}
-          />
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-2 rounded font-sans"
+          >
+            {categories.map((c) => (
+              <option key={c} className="dark:bg-gray-800">
+                {c}
+              </option>
+            ))}
+          </select>
 
           <button
             onClick={() => setShowArchived((s) => !s)}
@@ -491,6 +434,12 @@ export default function Habits({ habits }: { habits: HabitType[] }) {
                       <span className="px-2 py-0.5 text-xs rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-sans">
                         {habit.category}
                       </span>
+
+                      {habit.startDate && habit.startDate > todayStr() && (
+                        <span className="px-2 py-0.5 text-xs rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 font-sans">
+                          Starts {formatDateLabel(habit.startDate)}
+                        </span>
+                      )}
 
                       {milestone && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 font-sans">

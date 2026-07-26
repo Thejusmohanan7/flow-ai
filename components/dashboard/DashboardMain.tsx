@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import {
   Check,
   Pencil,
@@ -243,6 +244,18 @@ function ElapsedTimer({
   );
 }
 
+/* ---------------- ERROR HELPER ---------------- */
+// Pulls the real message out of a failed response body so the toast says
+// *why* it failed, not just that it did. Falls back if the body isn't JSON.
+const getErrorMessage = async (res: Response, fallback: string) => {
+  try {
+    const body = await res.json();
+    return body?.error || body?.message || fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
   const [taskList, setTaskList] = useState<TaskType[]>(tasks);
   const [search, setSearch] = useState("");
@@ -282,41 +295,56 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
     const confirmDelete = confirm("Delete this task?");
     if (!confirmDelete) return;
 
-    const res = await fetch(`/api/tasks/${id}`, {
-      method: "DELETE",
-    });
+    try {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: "DELETE",
+      });
 
-    if (res.ok) {
-      setTaskList((prev) => prev.filter((t) => t._id !== id));
-      alert("Task deleted successfully");
-    } else {
-      alert("Failed to delete task");
+      if (res.ok) {
+        setTaskList((prev) => prev.filter((t) => t._id !== id));
+        toast.success("Task deleted successfully");
+      } else {
+        toast.error(await getErrorMessage(res, "Failed to delete task"), {
+          description: `Status ${res.status}`,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong deleting this task");
     }
   };
 
   const updateStatus = async (task: TaskType, status: string) => {
     const timeFields = computeTimeFields(task, status);
 
-    const res = await fetch(`/api/tasks/${task._id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        ...task,
-        status,
-        ...timeFields,
-      }),
-    });
+    try {
+      const res = await fetch(`/api/tasks/${task._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...task,
+          status,
+          ...timeFields,
+        }),
+      });
 
-    if (res.ok) {
-      const data = await res.json();
+      if (res.ok) {
+        const data = await res.json();
 
-      setTaskList((prev) =>
-        prev.map((t) => (t._id === task._id ? data.data : t))
-      );
-    } else {
-      alert("Failed to update task");
+        setTaskList((prev) =>
+          prev.map((t) => (t._id === task._id ? data.data : t))
+        );
+        toast.success(`Status updated to "${status}"`);
+      } else {
+        toast.error(await getErrorMessage(res, "Failed to update task"), {
+          description: `Status ${res.status}`,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong updating this task");
     }
   };
 
@@ -360,7 +388,7 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
 
   const saveEdit = async (task: TaskType) => {
     if (!editTitle.trim()) {
-      alert("Title cannot be empty");
+      toast.error("Title cannot be empty");
       return;
     }
 
@@ -368,29 +396,37 @@ export default function DashboardMain({ tasks }: { tasks: TaskType[] }) {
       .map((s) => ({ title: s.title.trim(), completed: s.completed }))
       .filter((s) => s.title.length > 0);
 
-    const res = await fetch(`/api/tasks/${task._id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        ...task,
-        title: editTitle.trim(),
-        description: editDescription.trim(),
-        dueDate: editDueDate,
-        dueTime: editDueTime,
-        subtasks: cleanedSubtasks,
-      }),
-    });
+    try {
+      const res = await fetch(`/api/tasks/${task._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...task,
+          title: editTitle.trim(),
+          description: editDescription.trim(),
+          dueDate: editDueDate,
+          dueTime: editDueTime,
+          subtasks: cleanedSubtasks,
+        }),
+      });
 
-    if (res.ok) {
-      const data = await res.json();
-      setTaskList((prev) =>
-        prev.map((t) => (t._id === task._id ? data.data : t))
-      );
-      cancelEdit();
-    } else {
-      alert("Failed to update task");
+      if (res.ok) {
+        const data = await res.json();
+        setTaskList((prev) =>
+          prev.map((t) => (t._id === task._id ? data.data : t))
+        );
+        cancelEdit();
+        toast.success("Task updated");
+      } else {
+        toast.error(await getErrorMessage(res, "Failed to update task"), {
+          description: `Status ${res.status}`,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong updating this task");
     }
   };
 

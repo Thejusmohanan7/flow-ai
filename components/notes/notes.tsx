@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import { Plus, Trash2, Pencil, Check, X, StickyNote, Pin, ArrowLeft } from "lucide-react";
 
 type NoteType = {
@@ -69,6 +70,16 @@ const formatRelativeTime = (dateStr: string) => {
   return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
 };
 
+/* ---------------- ERROR HELPER ---------------- */
+const getErrorMessage = async (res: Response, fallback: string) => {
+  try {
+    const body = await res.json();
+    return body?.error || body?.message || fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 export default function NotesMain({ notes }: { notes: NoteType[] }) {
   const [noteList, setNoteList] = useState<NoteType[]>(notes);
 
@@ -103,7 +114,7 @@ export default function NotesMain({ notes }: { notes: NoteType[] }) {
 
   const addNote = async () => {
     if (!newTitle.trim()) {
-      alert("Title cannot be empty");
+      toast.error("Title cannot be empty");
       return;
     }
 
@@ -121,17 +132,20 @@ export default function NotesMain({ notes }: { notes: NoteType[] }) {
         }),
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        alert(data.message || "Failed to create note");
+        toast.error(await getErrorMessage(res, "Failed to create note"), {
+          description: `Status ${res.status}`,
+        });
         return;
       }
 
+      const data = await res.json();
       setNoteList((prev) => [data.data, ...prev]);
       resetComposer();
-    } catch (error) {
-      alert("Something went wrong");
+      toast.success("Note added");
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong creating this note");
     } finally {
       setSaving(false);
     }
@@ -141,12 +155,20 @@ export default function NotesMain({ notes }: { notes: NoteType[] }) {
     const confirmDelete = confirm("Delete this note?");
     if (!confirmDelete) return;
 
-    const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });
+    try {
+      const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });
 
-    if (res.ok) {
-      setNoteList((prev) => prev.filter((n) => n._id !== id));
-    } else {
-      alert("Failed to delete note");
+      if (res.ok) {
+        setNoteList((prev) => prev.filter((n) => n._id !== id));
+        toast.success("Note deleted");
+      } else {
+        toast.error(await getErrorMessage(res, "Failed to delete note"), {
+          description: `Status ${res.status}`,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong deleting this note");
     }
   };
 
@@ -168,47 +190,63 @@ export default function NotesMain({ notes }: { notes: NoteType[] }) {
 
   const saveEdit = async (note: NoteType) => {
     if (!editTitle.trim()) {
-      alert("Title cannot be empty");
+      toast.error("Title cannot be empty");
       return;
     }
 
-    const res = await fetch(`/api/notes/${note._id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...note,
-        title: editTitle.trim(),
-        content: editContent.trim(),
-        color: editColor,
-        pinned: editPinned,
-      }),
-    });
+    try {
+      const res = await fetch(`/api/notes/${note._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...note,
+          title: editTitle.trim(),
+          content: editContent.trim(),
+          color: editColor,
+          pinned: editPinned,
+        }),
+      });
 
-    if (res.ok) {
-      const data = await res.json();
-      setNoteList((prev) =>
-        prev.map((n) => (n._id === note._id ? data.data : n))
-      );
-      cancelEdit();
-    } else {
-      alert("Failed to update note");
+      if (res.ok) {
+        const data = await res.json();
+        setNoteList((prev) =>
+          prev.map((n) => (n._id === note._id ? data.data : n))
+        );
+        cancelEdit();
+        toast.success("Note updated");
+      } else {
+        toast.error(await getErrorMessage(res, "Failed to update note"), {
+          description: `Status ${res.status}`,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong updating this note");
     }
   };
 
   const togglePin = async (note: NoteType) => {
-    const res = await fetch(`/api/notes/${note._id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...note, pinned: !note.pinned }),
-    });
+    try {
+      const res = await fetch(`/api/notes/${note._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...note, pinned: !note.pinned }),
+      });
 
-    if (res.ok) {
-      const data = await res.json();
-      setNoteList((prev) =>
-        prev.map((n) => (n._id === note._id ? data.data : n))
-      );
-    } else {
-      alert("Failed to update note");
+      if (res.ok) {
+        const data = await res.json();
+        setNoteList((prev) =>
+          prev.map((n) => (n._id === note._id ? data.data : n))
+        );
+        toast.success(note.pinned ? "Note unpinned" : "Note pinned");
+      } else {
+        toast.error(await getErrorMessage(res, "Failed to update note"), {
+          description: `Status ${res.status}`,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong updating this note");
     }
   };
 
