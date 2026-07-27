@@ -107,43 +107,86 @@ export default function CreateTaskPage() {
         body: JSON.stringify({ title, description }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        toast.error(data.message || "AI suggestion failed");
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        toast.error("AI returned an unexpected response. Please try again.");
         return;
       }
 
-      if (data.description) {
-        if (
-          !description.trim() ||
-          confirm("Replace your current description with the AI suggestion?")
-        ) {
-          setDescription(data.description);
+      if (!res.ok) {
+        toast.error(data?.message || "AI suggestion failed. Please try again.");
+        return;
+      }
+
+      if (data?.isValidTask === false) {
+        toast.error(
+          data?.reason ||
+            "That doesn't look like an actionable task title. Try something more specific."
+        );
+        return;
+      }
+
+      const applySubtasksAndPriority = () => {
+        if (Array.isArray(data.subtasks) && data.subtasks.length > 0) {
+          setSubtasks((prev) => {
+            const existingLower = prev.map((s) => s.toLowerCase());
+            const newOnes = data.subtasks
+              .map((s: string) => s.trim())
+              .filter((s: string) => s && !existingLower.includes(s.toLowerCase()));
+            return [...prev, ...newOnes];
+          });
         }
-      }
 
-      if (Array.isArray(data.subtasks) && data.subtasks.length > 0) {
-        setSubtasks((prev) => {
-          const existingLower = prev.map((s) => s.toLowerCase());
-          const newOnes = data.subtasks
-            .map((s: string) => s.trim())
-            .filter((s: string) => s && !existingLower.includes(s.toLowerCase()));
-          return [...prev, ...newOnes];
-        });
-      }
+        if (data.priority) {
+          setPriority(data.priority);
+        }
 
-      if (data.priority) {
-        setPriority(data.priority);
+        toast.success("AI suggestions applied");
+      };
+
+      if (data?.description) {
+        if (!description.trim()) {
+          setDescription(data.description);
+          applySubtasksAndPriority();
+        } else {
+          // Ask before overwriting an existing description, using a
+          // non-blocking toast instead of a native confirm() dialog.
+          toast("Replace your current description with the AI suggestion?", {
+            action: {
+              label: "Replace",
+              onClick: () => {
+                setDescription(data.description);
+                applySubtasksAndPriority();
+              },
+            },
+            cancel: {
+              label: "Keep mine",
+              onClick: () => {
+                applySubtasksAndPriority();
+              },
+            },
+            duration: 8000,
+          });
+        }
+      } else {
+        applySubtasksAndPriority();
       }
     } catch (error) {
-toast.error("Something went wrong getting AI suggestions");
+      console.error("AI suggest error:", error);
+      toast.error("Something went wrong getting AI suggestions. Please try again.");
     } finally {
       setAiLoading(false);
     }
   };
 
   const handleSubmit = async () => {
+    if (!title.trim()) {
+      toast.error("Task title is required");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -170,12 +213,20 @@ toast.error("Something went wrong getting AI suggestions");
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-toast.error(data.message || "Failed to create task");
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        toast.error("Server returned an unexpected response. Please try again.");
         return;
       }
+
+      if (!res.ok) {
+        toast.error(data?.message || "Failed to create task");
+        return;
+      }
+
+      toast.success("Task created successfully");
 
       setTitle("");
       setDescription("");
@@ -184,7 +235,8 @@ toast.error(data.message || "Failed to create task");
 
       router.push("/dashboard");
     } catch (error) {
-toast.error("Something went wrong");
+      console.error("Create task error:", error);
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

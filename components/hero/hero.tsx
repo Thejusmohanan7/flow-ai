@@ -1,22 +1,26 @@
+"use client";
+
 import React from "react";
 import {
   ArrowRight,
-  PlayCircle,
   Sparkles,
-  CheckCircle,
   ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const Hero: React.FC = () => {
   return (
-<section className="relative overflow-hidden bg-linear-to-b from-white via-white to-slate-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">      {/* Background Blur Effects */}
+    <section className="relative overflow-hidden bg-gradient-to-b from-white via-white to-slate-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
+      
+      {/* Background Blur */}
       <div className="absolute top-20 left-10 h-72 w-72 rounded-full bg-blue-200/30 dark:bg-blue-500/10 blur-3xl" />
       <div className="absolute bottom-10 right-10 h-80 w-80 rounded-full bg-purple-200/30 dark:bg-purple-500/10 blur-3xl" />
+
       <div className="max-w-7xl mx-auto px-6 py-10 lg:py-16">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-          {/* Left Content */}
+          {/* LEFT SIDE */}
           <div className="text-center lg:text-left">
 
             {/* Badge */}
@@ -47,117 +51,64 @@ const Hero: React.FC = () => {
                   <ArrowRight size={18} />
                 </button>
               </Link>
-
-              {/* <button className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 dark:border-slate-700 px-7 py-3 font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                <PlayCircle size={18} />
-                Watch Demo
-              </button> */}
             </div>
 
-            {/* Trust Text */}
+            {/* Trust */}
             <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">
               Trusted by students, developers, freelancers, and founders to
-              simplify their workflow and achieve more every day.
+              simplify their workflow.
             </p>
 
             {/* Stats */}
             <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-6">
-              <div>
-                <h3 className="text-3xl font-bold text-slate-900 dark:text-white">100+</h3>
-                <p className="text-sm text-gray-500">Tasks Managed</p>
-              </div>
-
-              <div>
-                <h3 className="text-3xl font-bold text-slate-900 dark:text-white">50+</h3>
-                <p className="text-sm text-gray-500">Notes Created</p>
-              </div>
-
-              <div>
-                <h3 className="text-3xl font-bold text-slate-900 dark:text-white">95%</h3>
-                <p className="text-sm text-gray-500">Productivity Score</p>
-              </div>
-
-              <div>
-                <h3 className="text-3xl font-bold text-slate-900 dark:text-white">24/7</h3>
-                <p className="text-sm text-gray-500">AI Assistance</p>
-              </div>
+              <Stat title="100+" label="Tasks Managed" />
+              <Stat title="50+" label="Notes Created" />
+              <Stat title="95%" label="Productivity" />
+              <Stat title="24/7" label="AI Support" />
             </div>
-
-            
           </div>
 
-          {/* Right Side Dashboard */}
+          {/* RIGHT SIDE (DASHBOARD) */}
           <div className="relative">
 
-          
+            {/* Glow */}
+            <div className="absolute -inset-6 bg-blue-500/10 blur-3xl rounded-3xl"></div>
 
-            {/* Dashboard Card */}
-            <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-2xl">
+            {/* Window */}
+            <div className="relative rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl overflow-hidden">
 
-              <div className="flex items-center justify-between border-b pb-4">
-                <h3 className="font-semibold text-lg text-slate-900 dark:text-white">
-                    FlowAI Dashboard
-                </h3>
-
-                <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
-                  Live
-                </span>
+              {/* Mac Bar */}
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-200 dark:border-slate-800">
+                <div className="w-3 h-3 bg-red-500 rounded-full" />
+                <div className="w-3 h-3 bg-yellow-500 rounded-full" />
+                <div className="w-3 h-3 bg-green-500 rounded-full" />
               </div>
 
-              {/* Metrics */}
-              <div className="grid grid-cols-3 gap-4 mt-6">
-                <div className="rounded-xl bg-blue-50 dark:bg-blue-950/40 p-4">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Tasks</p>
-                  <h3 className="text-2xl font-bold text-blue-600">128</h3>
-                </div>
+              {/* LIGHT IMAGE */}
+              <Image
+                src="/white.png"
+                alt="Dashboard Light"
+                width={1200}
+                height={800}
+                className="w-full h-auto block dark:hidden transition-opacity duration-500"
+              />
 
-                <div className="rounded-xl bg-purple-50 dark:bg-purple-950/40 p-4">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Notes</p>
-                  <h3 className="text-2xl font-bold text-purple-600">74</h3>
-                </div>
+              {/* DARK IMAGE */}
+              <Image
+                src="/dark.png"
+                alt="Dashboard Dark"
+                width={1200}
+                height={800}
+                className="w-full h-auto hidden dark:block transition-opacity duration-500"
+              />
 
-                <div className="rounded-xl bg-green-50 dark:bg-green-950/40 p-4">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Score</p>
-                  <h3 className="text-2xl font-bold text-green-600">92%</h3>
-                </div>
-              </div>
-
-              {/* Recent Tasks */}
-              <div className="mt-6">
-                <h4 className="font-semibold mb-3">Recent Tasks</h4>
-
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle size={16} className="text-green-500" />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">Complete UI Design</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <CheckCircle size={16} className="text-green-500" />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">Prepare Meeting Notes</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <CheckCircle size={16} className="text-green-500" />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">Client Review Session</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* AI Suggestion */}
-              <div className="mt-6 rounded-xl bg-slate-50 dark:bg-slate-800 p-4">
-                <h4 className="font-semibold">AI Suggestion</h4>
-
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                  You have completed 80% of today's priorities. Focus on the
-                  remaining high-priority tasks to finish your day strong.
-                </p>
-              </div>
+              {/* Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
             </div>
           </div>
         </div>
 
-        {/* Benefits Strip */}
+        {/* Benefits */}
         <div className="mt-20 flex flex-wrap justify-center gap-8 border-t border-slate-200 dark:border-slate-800 pt-8 text-sm font-medium text-slate-600 dark:text-slate-400">
           <span>✓ Stay Organized</span>
           <span>✓ Save Time</span>
@@ -166,7 +117,7 @@ const Hero: React.FC = () => {
           <span>✓ Achieve More</span>
         </div>
 
-        {/* Scroll Indicator */}
+        {/* Scroll */}
         <div className="mt-12 flex justify-center">
           <div className="flex flex-col items-center text-slate-400 dark:text-slate-500">
             <span className="text-sm">Discover Features</span>
@@ -179,3 +130,13 @@ const Hero: React.FC = () => {
 };
 
 export default Hero;
+
+/* Reusable Stat Component */
+const Stat = ({ title, label }: { title: string; label: string }) => (
+  <div>
+    <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
+      {title}
+    </h3>
+    <p className="text-sm text-gray-500">{label}</p>
+  </div>
+);
