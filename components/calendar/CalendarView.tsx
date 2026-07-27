@@ -16,6 +16,7 @@ import {
   Users,
   Clock,
   Repeat,
+  ListChecks,
 } from "lucide-react";
 
 type TaskType = {
@@ -80,16 +81,34 @@ const formatTime12h = (dueTime?: string) => {
 };
 
 // Does this meeting occur on the given date?
+// Recurrence (weekdays / mon-sat / custom) only applies within the single
+// week that contains the meeting's start date — it does not repeat into
+// future weeks.
 const meetingOccursOn = (meeting: MeetingType, date: Date) => {
   const start = parseDateOnly(meeting.date);
   if (!start) return false;
-  if (startOfDay(date).getTime() < startOfDay(start).getTime()) return false;
+
+  if (meeting.recurrence === "none") {
+    return isSameDay(date, start);
+  }
+
+  // Sunday of the start date's week, through Saturday of that same week.
+  const weekStart = new Date(start);
+  weekStart.setDate(start.getDate() - start.getDay());
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+
+  const target = startOfDay(date).getTime();
+  if (
+    target < startOfDay(weekStart).getTime() ||
+    target > startOfDay(weekEnd).getTime()
+  ) {
+    return false;
+  }
 
   const day = date.getDay(); // 0=Sun ... 6=Sat
 
   switch (meeting.recurrence) {
-    case "none":
-      return isSameDay(date, start);
     case "weekdays":
       return day >= 1 && day <= 5;
     case "monsat":
@@ -104,16 +123,18 @@ const meetingOccursOn = (meeting: MeetingType, date: Date) => {
 const recurrenceLabel = (meeting: MeetingType) => {
   switch (meeting.recurrence) {
     case "weekdays":
-      return "Weekdays";
+      return "Mon–Fri this week";
     case "monsat":
-      return "Mon–Sat";
+      return "Mon–Sat this week";
     case "custom": {
       const names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-      return meeting.recurrenceDays
-        .slice()
-        .sort()
-        .map((d) => names[d])
-        .join(", ");
+      return (
+        meeting.recurrenceDays
+          .slice()
+          .sort()
+          .map((d) => names[d])
+          .join(", ") + " this week"
+      );
     }
     default:
       return null;
@@ -390,6 +411,7 @@ export default function CalendarView() {
 
   const [showAddMeeting, setShowAddMeeting] = useState(false);
   const [formExpanded, setFormExpanded] = useState(false);
+  const [showManageMeetings, setShowManageMeetings] = useState(false);
   const [newMeetingTitle, setNewMeetingTitle] = useState("");
   const [newMeetingTime, setNewMeetingTime] = useState("");
   const [newMeetingRecurrence, setNewMeetingRecurrence] = useState<Recurrence>("none");
@@ -590,8 +612,95 @@ export default function CalendarView() {
               <span className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition bg-blue-500/10 blur-md" />
               <ChevronRight size={16} className="relative z-10" />
             </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowManageMeetings((s) => !s)}
+              className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium font-sans rounded-lg border transition-colors ${
+                showManageMeetings
+                  ? "border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              }`}
+            >
+              <ListChecks size={14} />
+              Manage meetings
+            </motion.button>
           </div>
         </div>
+
+        {/* Manage all meetings panel */}
+        <AnimatePresence>
+          {showManageMeetings && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden mb-4"
+            >
+              <div className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 rounded-xl p-3 sm:p-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-sans mb-3">
+                  All meetings ({meetings.length}) — delete any duplicates or leftovers here.
+                </p>
+
+                {meetings.length === 0 ? (
+                  <p className="text-sm text-gray-400 dark:text-gray-500 font-sans">
+                    No meetings created yet.
+                  </p>
+                ) : (
+                  <ul className="space-y-2 max-h-72 overflow-y-auto">
+                    {[...meetings]
+                      .sort((a, b) => a.date.localeCompare(b.date))
+                      .map((m) => {
+                        const timeLabel = formatTime12h(m.time);
+                        const recLabel = recurrenceLabel(m);
+                        const startLabel = (() => {
+                          const d = parseDateOnly(m.date);
+                          return d
+                            ? d.toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })
+                            : m.date;
+                        })();
+
+                        return (
+                          <li
+                            key={m._id}
+                            className="flex items-center justify-between gap-2 border border-blue-100 dark:border-blue-900/40 bg-white dark:bg-gray-800 rounded-lg px-3 py-2"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Users size={15} className="text-blue-500 dark:text-blue-400 shrink-0" />
+                              <div className="min-w-0">
+                                <p className="text-sm font-sans truncate text-gray-900 dark:text-white">
+                                  {m.title}
+                                </p>
+                                <p className="text-[11px] text-gray-400 dark:text-gray-500 font-sans">
+                                  Starts {startLabel}
+                                  {timeLabel ? ` · ${timeLabel}` : ""}
+                                  {recLabel ? ` · ${recLabel}` : ""}
+                                </p>
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => deleteMeeting(m._id)}
+                              aria-label="Delete meeting"
+                              className="shrink-0 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </li>
+                        );
+                      })}
+                  </ul>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Weekday labels */}
         <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-1">
