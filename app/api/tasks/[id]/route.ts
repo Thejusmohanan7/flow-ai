@@ -62,6 +62,16 @@ export async function PUT(
     body.completedAt = null;
   }
 
+  // Reset reminder flags if the due date or due time changed, so the
+  // "before due" / "overdue" emails can fire again against the new deadline.
+  if (
+    (body.dueDate !== undefined && body.dueDate !== existing.dueDate) ||
+    (body.dueTime !== undefined && body.dueTime !== existing.dueTime)
+  ) {
+    body.reminderSentBefore = false;
+    body.reminderSentOverdue = false;
+  }
+
   const updated = await Task.findOneAndUpdate({ _id: id, userId }, body, {
     new: true,
   });

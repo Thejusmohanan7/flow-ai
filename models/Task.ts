@@ -21,6 +21,10 @@ const TaskSchema = new mongoose.Schema(
         completed: Boolean,
       },
     ],
+
+    reminderMinutesBefore: { type: Number, default: 30 },
+    reminderSentBefore: { type: Boolean, default: false },
+    reminderSentOverdue: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
